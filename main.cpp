@@ -112,8 +112,12 @@ int main()
     matproj.m[2][3] = (-fFar * fNear) / (fFar - fNear);
     matproj.m[3][2] = 1.0f;
 
+    mat4x4 matRotZ, matRotX;
+    float frame = 0;
+
     while (running)
     {
+        SDL_Delay(3);
         SDL_Event event;
         while (SDL_PollEvent(&event))
         {
@@ -126,13 +130,37 @@ int main()
         SDL_RenderClear(renderer);
         SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
 
+        frame += 1;
+        float theta = frame;
+        // rotation z
+        matRotZ.m[0][0] = cosf(theta * M_PI / 180);
+        matRotZ.m[0][1] = sinf(theta * M_PI / 180);
+        matRotZ.m[1][0] = -sinf(theta * M_PI / 180);
+        matRotZ.m[1][1] = cosf(theta * M_PI / 180);
+        matRotZ.m[2][2] = 1;
+        matRotZ.m[3][3] = 1;
+
+        // rotation x
+        matRotX.m[0][0] = 1;
+        matRotX.m[1][1] = cosf(theta / 2 * (M_PI / 180));
+        matRotX.m[1][2] = sinf(theta / 2 * (M_PI / 180));
+        matRotX.m[2][1] = -sinf(theta / 2 * (M_PI / 180));
+        matRotX.m[2][2] = cosf(theta / 2 * (M_PI / 180));
+        matRotX.m[3][3] = 1;
+
         for (auto tri : meshCube.tris)
         {
-            triangle triProjected, triTranslated;
+            triangle triProjected, triTranslated, triRotatedZ, triRotatedXZ;
             for (int i = 0; i < 3; i++)
             {
-                triTranslated = tri;
-                triTranslated.p[i].z += 10.0f;
+                MultiplyMatrixVector(tri.p[i], triRotatedZ.p[i], matRotZ);
+                MultiplyMatrixVector(triRotatedZ.p[i], triRotatedXZ.p[i], matRotX);
+                triTranslated = triRotatedXZ;
+                // cout << (triTranslated.p[i].x) << "/ ";
+                // cout << (triTranslated.p[i].y) << "/ ";
+                // cout << (triTranslated.p[i].z) << "\n";
+                triTranslated.p[i].z += 15.0f;
+
                 MultiplyMatrixVector(triTranslated.p[i], triProjected.p[i], matproj);
             }
 
@@ -142,10 +170,10 @@ int main()
             {
                 triProjected.p[i].x += 1.0f;
                 triProjected.p[i].y += 1.0f;
-                triProjected.p[i].x *= 0.5f * (float)w;
-                triProjected.p[i].y *= 0.5f * (float)h;
-                triProjected.p[i].x += 200.0f;
-                triProjected.p[i].y += 100.0f;
+                triProjected.p[i].x *= 0.5f * (float)w; // centers to x
+                triProjected.p[i].y *= 0.5f * (float)h; // centers to y
+                // triProjected.p[i].x += 100.0f;            // moves everything in x
+                // triProjected.p[i].y += 100.0f;            // moves everything in y
             }
 
             DrawTriangle(renderer,
@@ -155,8 +183,8 @@ int main()
         }
         SDL_RenderPresent(renderer);
     }
-
     SDL_DestroyWindow(window);
     SDL_Quit();
     return 0;
 }
+// g++ - Isrc / Include - Lsrc / lib - o main main.cpp - lSDL3
