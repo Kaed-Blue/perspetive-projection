@@ -2,6 +2,7 @@
 #include <iostream>
 #include <vector>
 #include <math.h>
+
 using namespace std;
 
 struct vec3d
@@ -51,6 +52,30 @@ void DrawTriangle(SDL_Renderer *renderer, int a_x, int a_y, int b_x, int b_y, in
     SDL_RenderLine(renderer, a_x, a_y, b_x, b_y);
     SDL_RenderLine(renderer, b_x, b_y, c_x, c_y);
     SDL_RenderLine(renderer, c_x, c_y, a_x, a_y);
+}
+
+vec3d GetNormal(triangle tri) // gives normalized cross product
+{
+    vec3d line1, line2, normal;
+
+    line1.x = tri.p[1].x - tri.p[0].x;
+    line1.y = tri.p[1].y - tri.p[0].y;
+    line1.z = tri.p[1].z - tri.p[0].z;
+
+    line2.x = tri.p[2].x - tri.p[0].x;
+    line2.y = tri.p[2].y - tri.p[0].y;
+    line2.z = tri.p[2].z - tri.p[0].z;
+
+    normal.x = (line1.y * line2.z) - (line2.y * line1.z);
+    normal.y = (line1.x * line2.z) - (line2.x * line1.z);
+    normal.z = (line1.x * line2.y) - (line2.x * line1.y);
+
+    float magnitude = sqrtf(normal.x * normal.x + normal.y * normal.y + normal.z * normal.z);
+    normal.x /= magnitude;
+    normal.y /= magnitude;
+    normal.z /= magnitude;
+
+    return normal;
 }
 
 #define WIDTH 700
@@ -117,7 +142,7 @@ int main()
 
     while (running)
     {
-        SDL_Delay(3);
+        SDL_Delay(10);
         SDL_Event event;
         while (SDL_PollEvent(&event))
         {
@@ -155,13 +180,18 @@ int main()
             {
                 MultiplyMatrixVector(tri.p[i], triRotatedZ.p[i], matRotZ);
                 MultiplyMatrixVector(triRotatedZ.p[i], triRotatedXZ.p[i], matRotX);
-                triTranslated = triRotatedXZ;
-                // cout << (triTranslated.p[i].x) << "/ ";
-                // cout << (triTranslated.p[i].y) << "/ ";
-                // cout << (triTranslated.p[i].z) << "\n";
+                triTranslated.p[i] = triRotatedXZ.p[i];
                 triTranslated.p[i].z += 15.0f;
+            }
 
-                MultiplyMatrixVector(triTranslated.p[i], triProjected.p[i], matproj);
+            vec3d normal = GetNormal(triTranslated);
+            // cout << normal.x << "/" << normal.y << "/" << normal.z << "\n";
+            if (normal.z < 0)
+            {
+                for (int i = 0; i < 3; i++)
+                {
+                    MultiplyMatrixVector(triTranslated.p[i], triProjected.p[i], matproj);
+                }
             }
 
             int w, h;
@@ -187,4 +217,4 @@ int main()
     SDL_Quit();
     return 0;
 }
-// g++ - Isrc / Include - Lsrc / lib - o main main.cpp - lSDL3
+// g++ -Isrc/include -Lsrc/lib -o main main.cpp -lSDL3
