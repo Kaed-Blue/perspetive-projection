@@ -25,6 +25,10 @@ public:
 
   vec3d GetNormal(triangle tri);
 
+  float DotProduct(vec3d v1, vec3d v2);
+
+  vec3d SubtractVector(vec3d v1, vec3d v2);
+
   void RotationZ(float theta);
 
   void RotationX(float theta);
@@ -37,5 +41,5 @@ public:
                     int c_x,
                     int c_y);
 
-  void DrawMesh(std::vector<triangle> tris, int frame);
+  void DrawMesh(std::vector<triangle> tris, int frame, vec3d cameraPos);
 };

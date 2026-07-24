@@ -73,6 +73,22 @@ Renderer::GetNormal(triangle tri) // gives normalized cross product
   return normal;
 }
 
+float
+Renderer::DotProduct(vec3d v1, vec3d v2)
+{
+  return v1.x * v2.x + v1.y * v2.y + v1.z * v2.z;
+}
+
+vec3d
+Renderer::SubtractVector(vec3d v1, vec3d v2)
+{
+  vec3d res;
+  res.x = v1.x - v2.x;
+  res.y = v1.y - v2.y;
+  res.z = v1.z - v2.z;
+  return res;
+}
+
 void
 Renderer::RotationZ(float angel)
 {
@@ -110,7 +126,7 @@ Renderer::DrawTriangle(SDL_Renderer* sdlrenderer,
 }
 
 void
-Renderer::DrawMesh(std::vector<triangle> mesh, int frame)
+Renderer::DrawMesh(std::vector<triangle> mesh, int frame, vec3d cameraPos)
 {
   float angel = frame * M_PI / 180;
   RotationZ(angel);
@@ -126,8 +142,10 @@ Renderer::DrawMesh(std::vector<triangle> mesh, int frame)
     }
 
     vec3d normal = GetNormal(triTranslated);
-    // cout << normal.x << "/" << normal.y << "/" << normal.z << "\n";
-    if (normal.z < 0) {
+    vec3d cameraRay = SubtractVector(triTranslated.p[0], cameraPos);
+    float dotProduct = DotProduct(normal, cameraRay);
+
+    if (dotProduct > 0) {
       for (int i = 0; i < 3; i++) {
         triProjected.p[i] = MultiplyMatrixVector(triTranslated.p[i], matproj);
       }

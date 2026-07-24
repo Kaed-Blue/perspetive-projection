@@ -16,6 +16,7 @@ Engine::Initialize()
   sdlRenderer = SDL_CreateRenderer(window, nullptr);
 
   Erenderer = new Renderer(sdlRenderer);
+  Ecamera = new Camera();
 
   if (!window) {
     return false;
@@ -28,7 +29,7 @@ Engine::run()
 {
   bool running = true;
   while (running) {
-    SDL_Delay(5);
+    SDL_Delay(20);
     SDL_Event event;
     while (SDL_PollEvent(&event)) {
       if (event.type == SDL_EVENT_QUIT) {
@@ -45,7 +46,7 @@ Engine::run()
     Mesh cube;
     cube.CreateCube();
 
-    Erenderer->DrawMesh(cube.tris, frame);
+    Erenderer->DrawMesh(cube.tris, frame, Ecamera->GetCameraPos());
     SDL_RenderPresent(sdlRenderer);
   }
   SDL_DestroyWindow(window);

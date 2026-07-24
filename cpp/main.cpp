@@ -5,11 +5,10 @@ using namespace std;
 
 int main()
 {
-  cout << "1";
   Engine engine;
-  cout << "2";
   engine.Initialize();
   engine.run();
+  engine.clean();
 
   cout << "main finished";
   return 0;
