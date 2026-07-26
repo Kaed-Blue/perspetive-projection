@@ -161,13 +161,23 @@ Renderer::DrawMesh(std::vector<triangle> mesh, int frame, vec3d cameraPos)
         // triProjected.p[i].y += 100.0f;            // moves everything in y
       }
 
-      DrawTriangle(sdlrenderer,
-                   triProjected.p[0].x,
-                   triProjected.p[0].y,
-                   triProjected.p[1].x,
-                   triProjected.p[1].y,
-                   triProjected.p[2].x,
-                   triProjected.p[2].y);
+      SDL_Vertex vertex[2];
+      vertex[0].position = { triProjected.p[0].x, triProjected.p[0].y };
+      vertex[0].color = { 1, 1, 1, 1 };
+      vertex[1].position = { triProjected.p[1].x, triProjected.p[1].y };
+      vertex[1].color = { 1, 1, 1, 1 };
+      vertex[2].position = { triProjected.p[2].x, triProjected.p[2].y };
+      vertex[2].color = { 1, 1, 1, 1 };
+
+      SDL_RenderGeometry(sdlrenderer, NULL, vertex, 3, NULL, 0);
+
+      // DrawTriangle(sdlrenderer,
+      //              triProjected.p[0].x,
+      //              triProjected.p[0].y,
+      //              triProjected.p[1].x,
+      //              triProjected.p[1].y,
+      //              triProjected.p[2].x,
+      //              triProjected.p[2].y);
     }
   }
 }
