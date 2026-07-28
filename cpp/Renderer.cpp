@@ -1,4 +1,5 @@
 #include "Renderer.h"
+#include <iostream>
 
 Renderer::Renderer(SDL_Renderer* sdlrenderer)
   : sdlrenderer(sdlrenderer)
@@ -13,108 +14,6 @@ Renderer::Renderer(SDL_Renderer* sdlrenderer)
   matproj.m[2][3] = (-fFar * fNear) / (fFar - fNear);
   matproj.m[3][2] = 1.0f;
 };
-
-vec3d
-Renderer::MultiplyMatrixVector(const vec3d& i, const mat4x4& m)
-{
-  vec3d o;
-  o.x = i.x * m.m[0][0] + i.y * m.m[1][0] + i.z * m.m[2][0] + m.m[3][0];
-  o.y = i.x * m.m[0][1] + i.y * m.m[1][1] + i.z * m.m[2][1] + m.m[3][1];
-  o.z = i.x * m.m[0][2] + i.y * m.m[1][2] + i.z * m.m[2][2] + m.m[3][2];
-  float w = i.x * m.m[0][3] + i.y * m.m[1][3] + i.z * m.m[2][3] + m.m[3][3];
-
-  if (w != 0.0f) {
-    o.x /= w;
-    o.y /= w;
-    o.z /= w;
-  }
-  return o;
-}
-
-mat4x4
-Renderer::MultiplyMatrices(const mat4x4& m1, const mat4x4& m2)
-{
-  mat4x4 res;
-
-  for (int row = 0; row < 4; row++) {
-    for (int col = 0; col < 4; col++) {
-
-      res.m[row][col] =
-        m1.m[row][0] * m2.m[0][col] + m1.m[row][1] * m2.m[1][col] +
-        m1.m[row][2] * m2.m[2][col] + m1.m[row][3] * m2.m[3][col];
-    }
-  }
-  return res;
-}
-
-vec3d
-Renderer::GetNormal(triangle& tri) // gives normalized cross product
-{
-  vec3d line1, line2, normal;
-
-  line1.x = tri.p[1].x - tri.p[0].x;
-  line1.y = tri.p[1].y - tri.p[0].y;
-  line1.z = tri.p[1].z - tri.p[0].z;
-
-  line2.x = tri.p[2].x - tri.p[0].x;
-  line2.y = tri.p[2].y - tri.p[0].y;
-  line2.z = tri.p[2].z - tri.p[0].z;
-
-  normal.x = (line1.y * line2.z) - (line2.y * line1.z);
-  normal.y = (line1.z * line2.x) - (line2.z * line1.x);
-  normal.z = (line1.x * line2.y) - (line2.x * line1.y);
-
-  Normalize(normal);
-
-  return normal;
-}
-
-void
-Renderer::Normalize(vec3d& vec)
-{
-  float magnitude = sqrtf(vec.x * vec.x + vec.y * vec.y + vec.z * vec.z);
-  vec.x /= magnitude;
-  vec.y /= magnitude;
-  vec.z /= magnitude;
-}
-
-float
-Renderer::DotProduct(vec3d& v1, vec3d& v2)
-{
-  return v1.x * v2.x + v1.y * v2.y + v1.z * v2.z;
-}
-
-vec3d
-Renderer::SubtractVector(vec3d& v1, vec3d& v2)
-{
-  vec3d res;
-  res.x = v1.x - v2.x;
-  res.y = v1.y - v2.y;
-  res.z = v1.z - v2.z;
-  return res;
-}
-
-void
-Renderer::RotationZ(float angel)
-{
-  matRotZ.m[0][0] = cosf(angel);
-  matRotZ.m[0][1] = sinf(angel);
-  matRotZ.m[1][0] = -sinf(angel);
-  matRotZ.m[1][1] = cosf(angel);
-  matRotZ.m[2][2] = 1;
-  matRotZ.m[3][3] = 1;
-}
-
-void
-Renderer::RotationX(float angel)
-{
-  matRotX.m[0][0] = 1;
-  matRotX.m[1][1] = cosf(angel / 2);
-  matRotX.m[1][2] = sinf(angel / 2);
-  matRotX.m[2][1] = -sinf(angel / 2);
-  matRotX.m[2][2] = cosf(angel / 2);
-  matRotX.m[3][3] = 1;
-}
 
 void
 Renderer::DrawTriangle(SDL_Renderer* sdlrenderer,
@@ -134,25 +33,27 @@ void
 Renderer::DrawMesh(std::vector<triangle> mesh, int frame, vec3d cameraPos)
 {
   float angel = frame * M_PI / 180;
-  RotationZ(angel);
-  RotationX(angel);
-  mat4x4 matRotated = MultiplyMatrices(matRotZ, matRotX);
+  RvecMath.RotationZ(matRotZ, angel);
+  RvecMath.RotationX(matRotX, angel);
+
+  mat4x4 matRotated = RvecMath.MultiplyMatrices(matRotZ, matRotX);
 
   for (auto tri : mesh) {
     triangle triProjected, triTranslated;
     for (int i = 0; i < 3; i++) {
-      vec3d pointRotated = MultiplyMatrixVector(tri.p[i], matRotated);
+      vec3d pointRotated = RvecMath.MultiplyMatrixVector(tri.p[i], matRotated);
       triTranslated.p[i] = pointRotated;
       triTranslated.p[i].z += 15.0f;
     }
 
-    vec3d normal = GetNormal(triTranslated);
-    vec3d cameraRay = SubtractVector(triTranslated.p[0], cameraPos);
-    float dotProduct = DotProduct(normal, cameraRay);
+    vec3d normal = RvecMath.GetNormal(triTranslated);
+    vec3d cameraRay = RvecMath.SubtractVector(triTranslated.p[0], cameraPos);
+    float dotProduct = RvecMath.DotProduct(normal, cameraRay);
 
     if (dotProduct > 0) {
       for (int i = 0; i < 3; i++) {
-        triProjected.p[i] = MultiplyMatrixVector(triTranslated.p[i], matproj);
+        triProjected.p[i] =
+          RvecMath.MultiplyMatrixVector(triTranslated.p[i], matproj);
       }
 
       int w, h;
@@ -167,8 +68,8 @@ Renderer::DrawMesh(std::vector<triangle> mesh, int frame, vec3d cameraPos)
       }
 
       vec3d lightRay = Rilumination.GetLightRay();
-      Normalize(lightRay);
-      float LumDP = DotProduct(normal, lightRay);
+      RvecMath.Normalize(lightRay);
+      float LumDP = RvecMath.DotProduct(normal, lightRay);
       SDL_FColor Lum = Rilumination.ShadowValue(
         LumDP); // TODO: make ShadowValue do the 3 lines above
 
@@ -192,4 +93,3 @@ Renderer::DrawMesh(std::vector<triangle> mesh, int frame, vec3d cameraPos)
     }
   }
 }
-// TODO: create math class

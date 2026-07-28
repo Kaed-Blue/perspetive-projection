@@ -1,5 +1,6 @@
 #pragma once
 #include "Ilumination.h"
+#include "VecMath.h"
 #include "types.h"
 #include <SDL3/SDL.h>
 #include <math.h>
@@ -14,6 +15,7 @@ private:
   float fFovRad = 1.0f / tanf(fFov * 0.5f / 180.0f * 3.14159f);
   float aspectRatio;
   SDL_Renderer* sdlrenderer;
+  VecMath RvecMath;
   Ilumination Rilumination;
   mat4x4 matproj;
   mat4x4 matRotZ, matRotX;
