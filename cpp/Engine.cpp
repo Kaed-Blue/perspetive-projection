@@ -29,7 +29,7 @@ Engine::run()
 {
   bool running = true;
   while (running) {
-    SDL_Delay(20);
+    SDL_Delay(10);
     SDL_Event event;
     while (SDL_PollEvent(&event)) {
       if (event.type == SDL_EVENT_QUIT) {
@@ -42,6 +42,9 @@ Engine::run()
     SDL_SetRenderDrawColor(sdlRenderer, 255, 255, 255, 255);
 
     frame += 1;
+    if (frame > 720) {
+      frame = 0;
+    }
 
     Mesh cube;
     cube.CreateCube();
@@ -49,6 +52,7 @@ Engine::run()
     Erenderer->DrawMesh(cube.tris, frame, Ecamera->GetCameraPos());
     SDL_RenderPresent(sdlRenderer);
   }
+  clean();
   SDL_DestroyWindow(window);
   SDL_Quit();
 }
@@ -57,4 +61,5 @@ void
 Engine::clean()
 {
   delete Erenderer;
+  delete Ecamera;
 }

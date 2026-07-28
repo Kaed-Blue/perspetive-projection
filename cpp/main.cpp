@@ -8,7 +8,6 @@ int main()
   Engine engine;
   engine.Initialize();
   engine.run();
-  engine.clean();
 
   cout << "main finished";
   return 0;

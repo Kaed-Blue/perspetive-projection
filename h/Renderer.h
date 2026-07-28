@@ -1,4 +1,5 @@
 #pragma once
+#include "Ilumination.h"
 #include "types.h"
 #include <SDL3/SDL.h>
 #include <math.h>
@@ -13,6 +14,7 @@ private:
   float fFovRad = 1.0f / tanf(fFov * 0.5f / 180.0f * 3.14159f);
   float aspectRatio;
   SDL_Renderer* sdlrenderer;
+  Ilumination Rilumination;
   mat4x4 matproj;
   mat4x4 matRotZ, matRotX;
 
@@ -23,11 +25,13 @@ public:
 
   mat4x4 MultiplyMatrices(const mat4x4& m1, const mat4x4& m2);
 
-  vec3d GetNormal(triangle tri);
+  vec3d GetNormal(triangle& tri);
 
-  float DotProduct(vec3d v1, vec3d v2);
+  void Normalize(vec3d& vec);
 
-  vec3d SubtractVector(vec3d v1, vec3d v2);
+  float DotProduct(vec3d& v1, vec3d& v2);
+
+  vec3d SubtractVector(vec3d& v1, vec3d& v2);
 
   void RotationZ(float theta);
 

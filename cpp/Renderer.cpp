@@ -48,7 +48,7 @@ Renderer::MultiplyMatrices(const mat4x4& m1, const mat4x4& m2)
 }
 
 vec3d
-Renderer::GetNormal(triangle tri) // gives normalized cross product
+Renderer::GetNormal(triangle& tri) // gives normalized cross product
 {
   vec3d line1, line2, normal;
 
@@ -64,23 +64,28 @@ Renderer::GetNormal(triangle tri) // gives normalized cross product
   normal.y = (line1.z * line2.x) - (line2.z * line1.x);
   normal.z = (line1.x * line2.y) - (line2.x * line1.y);
 
-  float magnitude =
-    sqrtf(normal.x * normal.x + normal.y * normal.y + normal.z * normal.z);
-  normal.x /= magnitude;
-  normal.y /= magnitude;
-  normal.z /= magnitude;
+  Normalize(normal);
 
   return normal;
 }
 
+void
+Renderer::Normalize(vec3d& vec)
+{
+  float magnitude = sqrtf(vec.x * vec.x + vec.y * vec.y + vec.z * vec.z);
+  vec.x /= magnitude;
+  vec.y /= magnitude;
+  vec.z /= magnitude;
+}
+
 float
-Renderer::DotProduct(vec3d v1, vec3d v2)
+Renderer::DotProduct(vec3d& v1, vec3d& v2)
 {
   return v1.x * v2.x + v1.y * v2.y + v1.z * v2.z;
 }
 
 vec3d
-Renderer::SubtractVector(vec3d v1, vec3d v2)
+Renderer::SubtractVector(vec3d& v1, vec3d& v2)
 {
   vec3d res;
   res.x = v1.x - v2.x;
@@ -161,13 +166,19 @@ Renderer::DrawMesh(std::vector<triangle> mesh, int frame, vec3d cameraPos)
         // triProjected.p[i].y += 100.0f;            // moves everything in y
       }
 
-      SDL_Vertex vertex[2];
+      vec3d lightRay = Rilumination.GetLightRay();
+      Normalize(lightRay);
+      float LumDP = DotProduct(normal, lightRay);
+      SDL_FColor Lum = Rilumination.ShadowValue(
+        LumDP); // TODO: make ShadowValue do the 3 lines above
+
+      SDL_Vertex vertex[3];
       vertex[0].position = { triProjected.p[0].x, triProjected.p[0].y };
-      vertex[0].color = { 1, 1, 1, 1 };
+      vertex[0].color = Lum;
       vertex[1].position = { triProjected.p[1].x, triProjected.p[1].y };
-      vertex[1].color = { 1, 1, 1, 1 };
+      vertex[1].color = Lum;
       vertex[2].position = { triProjected.p[2].x, triProjected.p[2].y };
-      vertex[2].color = { 1, 1, 1, 1 };
+      vertex[2].color = Lum;
 
       SDL_RenderGeometry(sdlrenderer, NULL, vertex, 3, NULL, 0);
 
@@ -181,3 +192,4 @@ Renderer::DrawMesh(std::vector<triangle> mesh, int frame, vec3d cameraPos)
     }
   }
 }
+// TODO: create math class
