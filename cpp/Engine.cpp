@@ -27,6 +27,10 @@ Engine::Initialize()
 void
 Engine::run()
 {
+  Mesh cube;
+  // cube.CreateCube();
+  cube.LoadFromObj("../obj/Tetrahedron.obj");
+
   bool running = true;
   while (running) {
     SDL_Delay(10);
@@ -45,9 +49,6 @@ Engine::run()
     if (frame > 720) {
       frame = 0;
     }
-
-    Mesh cube;
-    cube.CreateCube();
 
     Erenderer->DrawMesh(cube.tris, frame, Ecamera->GetCameraPos());
     SDL_RenderPresent(sdlRenderer);
