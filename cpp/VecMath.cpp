@@ -81,24 +81,32 @@ VecMath::SubtractVector(vec3d& v1, vec3d& v2)
   return res;
 }
 
-void
-VecMath::RotationZ(mat4x4& mat, float angel)
+void VecMath::RotationX(mat4x4 &mat, float angel, float speed)
 {
-  mat.m[0][0] = cosf(angel);
-  mat.m[0][1] = sinf(angel);
-  mat.m[1][0] = -sinf(angel);
-  mat.m[1][1] = cosf(angel);
-  mat.m[2][2] = 1;
+  mat.m[0][0] = 1;
+  mat.m[1][1] = cosf(angel * speed);
+  mat.m[1][2] = sinf(angel * speed);
+  mat.m[2][1] = -sinf(angel * speed);
+  mat.m[2][2] = cosf(angel * speed);
   mat.m[3][3] = 1;
 }
 
-void
-VecMath::RotationX(mat4x4& mat, float angel)
+void VecMath::RotationY(mat4x4 &mat, float angel, float speed)
 {
-  mat.m[0][0] = 1;
-  mat.m[1][1] = cosf(angel / 2);
-  mat.m[1][2] = sinf(angel / 2);
-  mat.m[2][1] = -sinf(angel / 2);
-  mat.m[2][2] = cosf(angel / 2);
+  mat.m[0][0] = cosf(angel * speed);
+  mat.m[0][2] = sinf(angel * speed);
+  mat.m[1][1] = 1;
+  mat.m[2][0] = -sinf(angel * speed);
+  mat.m[2][2] = cosf(angel * speed);
+  mat.m[3][3] = 1;
+}
+
+void VecMath::RotationZ(mat4x4 &mat, float angel, float speed)
+{
+  mat.m[0][0] = cosf(angel * speed);
+  mat.m[0][1] = sinf(angel * speed);
+  mat.m[1][0] = -sinf(angel * speed);
+  mat.m[1][1] = cosf(angel * speed);
+  mat.m[2][2] = 1;
   mat.m[3][3] = 1;
 }

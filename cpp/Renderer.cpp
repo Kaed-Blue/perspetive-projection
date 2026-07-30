@@ -1,13 +1,13 @@
 #include "Renderer.h"
-#include <iostream>
+#include "VecMath.h"
 
 Renderer::Renderer(SDL_Renderer* sdlrenderer)
   : sdlrenderer(sdlrenderer)
 {
   int w, h;
   SDL_GetRenderOutputSize(sdlrenderer, &w, &h);
-  float aspectRatio = w / h;
-  float fFovRad = 1.0f / tanf(fFov * 0.5f / 180.0f * 3.14159f);
+  aspectRatio = static_cast<float>(w) / h;
+  fFovRad = 1.0f / tanf(fFov * 0.5f / 180.0f * 3.14159f);
   matproj.m[0][0] = aspectRatio * fFovRad;
   matproj.m[1][1] = fFovRad;
   matproj.m[2][2] = fFar / (fFar - fNear);
@@ -29,31 +29,37 @@ Renderer::DrawTriangle(SDL_Renderer* sdlrenderer,
   SDL_RenderLine(sdlrenderer, c_x, c_y, a_x, a_y);
 }
 
+mat4x4 operator*(const mat4x4 &mat1, const mat4x4 &mat2) // operator overloading
+{
+  return VecMath::MultiplyMatrices(mat1, mat2);
+}
+
 void
 Renderer::DrawMesh(std::vector<triangle> mesh, int frame, vec3d cameraPos)
 {
   float angel = frame * M_PI / 180;
-  RvecMath.RotationZ(matRotZ, angel);
-  RvecMath.RotationX(matRotX, angel);
+  VecMath::RotationX(matRotX, angel, 0.7);
+  VecMath::RotationY(matRotY, angel, 0.5);
+  VecMath::RotationZ(matRotZ, angel, 1);
 
-  mat4x4 matRotated = RvecMath.MultiplyMatrices(matRotZ, matRotX);
+  mat4x4 matRotated = matRotX * matRotY * matRotZ; // using "*" as MultiplyMatrices
 
   for (auto tri : mesh) {
     triangle triProjected, triTranslated;
     for (int i = 0; i < 3; i++) {
-      vec3d pointRotated = RvecMath.MultiplyMatrixVector(tri.p[i], matRotated);
+      vec3d pointRotated = VecMath::MultiplyMatrixVector(tri.p[i], matRotated);
       triTranslated.p[i] = pointRotated;
       triTranslated.p[i].z += 15.0f;
     }
 
-    vec3d normal = RvecMath.GetNormal(triTranslated);
-    vec3d cameraRay = RvecMath.SubtractVector(triTranslated.p[0], cameraPos);
-    float dotProduct = RvecMath.DotProduct(normal, cameraRay);
+    vec3d normal = VecMath::GetNormal(triTranslated);
+    vec3d cameraRay = VecMath::SubtractVector(triTranslated.p[0], cameraPos);
+    float dotProduct = VecMath::DotProduct(normal, cameraRay);
 
     if (dotProduct > 0) {
       for (int i = 0; i < 3; i++) {
         triProjected.p[i] =
-          RvecMath.MultiplyMatrixVector(triTranslated.p[i], matproj);
+            VecMath::MultiplyMatrixVector(triTranslated.p[i], matproj);
       }
 
       int w, h;
@@ -67,11 +73,7 @@ Renderer::DrawMesh(std::vector<triangle> mesh, int frame, vec3d cameraPos)
         // triProjected.p[i].y += 100.0f;            // moves everything in y
       }
 
-      vec3d lightRay = Rilumination.GetLightRay();
-      RvecMath.Normalize(lightRay);
-      float LumDP = RvecMath.DotProduct(normal, lightRay);
-      SDL_FColor Lum = Rilumination.ShadowValue(
-        LumDP); // TODO: make ShadowValue do the 3 lines above
+      SDL_FColor Lum = Rilumination.ShadowValue(normal);
 
       SDL_Vertex vertex[3];
       vertex[0].position = { triProjected.p[0].x, triProjected.p[0].y };

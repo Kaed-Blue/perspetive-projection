@@ -1,8 +1,8 @@
 #pragma once
-#include "Camera.h"
-#include "Mesh.h"
-#include "Renderer.h"
 #include <SDL3/SDL.h>
+
+class Renderer;
+class Camera;
 
 class Engine
 {

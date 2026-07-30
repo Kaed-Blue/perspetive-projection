@@ -10,5 +10,5 @@ private:
 public:
   vec3d GetLightRay();
 
-  SDL_FColor ShadowValue(float Lum);
+  SDL_FColor ShadowValue(vec3d &normal);
 };

@@ -1,10 +1,8 @@
 #pragma once
 #include "types.h"
 #include <cstring>
-#include <fstream>
-#include <iostream>
 #include <vector>
-#include <sstream>
+#include <iostream>
 
 class Mesh
 {

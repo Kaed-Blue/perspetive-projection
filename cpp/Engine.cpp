@@ -1,4 +1,7 @@
 #include "Engine.h"
+#include "Renderer.h"
+#include "Camera.h"
+#include "Mesh.h"
 
 float
 Engine::GetAspectRatio(SDL_Window* window)
@@ -28,8 +31,8 @@ void
 Engine::run()
 {
   Mesh cube;
-  // cube.CreateCube();
-  cube.LoadFromObj("../obj/Tetrahedron.obj");
+  cube.CreateCube();
+  // cube.LoadFromObj("../obj/tetrahedron.obj");
 
   bool running = true;
   while (running) {
