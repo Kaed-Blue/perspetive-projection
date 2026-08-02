@@ -53,7 +53,8 @@ Engine::run()
     //   frame = 0;
     // }
 
-    Erenderer->DrawMesh(cube.tris, frame, Ecamera->GetCameraPos());
+    Erenderer->DrawMesh(cube, frame, Ecamera->GetCameraPos(), {0, 0, 50});
+
     SDL_RenderPresent(sdlRenderer);
   }
   clean();

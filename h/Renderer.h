@@ -5,13 +5,15 @@
 #include <math.h>
 #include <vector>
 
+class Mesh;
+
 class Renderer
 {
 private:
-  float fNear = 0.1f;
-  float fFar = 1000.0f;
-  float fFov = 90.0f;
-  float fFovRad = 1.0f / tanf(fFov * 0.5f / 180.0f * 3.14159f);
+  float Near = 0.1f;
+  float Far = 1000.0f;
+  float Fov = 90.0f;
+  float FovRad = 1.0f / tanf(Fov * 0.5f / 180.0f * 3.14159f);
   float aspectRatio;
   SDL_Renderer *sdlrenderer;
   Ilumination Rilumination;
@@ -29,5 +31,5 @@ public:
                     int c_x,
                     int c_y);
 
-  void DrawMesh(std::vector<triangle> tris, int frame, vec3d cameraPos);
+  void DrawMesh(Mesh mesh, int frame, vec3d cameraPos, vec3d objPos);
 };

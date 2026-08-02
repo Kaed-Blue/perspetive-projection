@@ -34,18 +34,34 @@ VecMath::MultiplyMatrices(const mat4x4& m1, const mat4x4& m2)
   return res;
 }
 
-vec3d
-VecMath::GetNormal(triangle& tri) // gives normalized cross product
+mat4x4
+VecMath::TranslateMatrix(const float &x, const float &y, const float &z)
+{
+  mat4x4 mat = MakeIdentity();
+  mat.m[3][0] = x;
+  mat.m[3][1] = y;
+  mat.m[3][2] = z;
+  return mat;
+}
+
+mat4x4
+VecMath::MakeIdentity()
+{
+  mat4x4 mat;
+  mat.m[0][0] = 1;
+  mat.m[1][1] = 1;
+  mat.m[2][2] = 1;
+  mat.m[3][3] = 1;
+
+  return mat;
+}
+
+vec3d VecMath::GetVectorNormal(triangle &tri) // gives normalized cross product
 {
   vec3d line1, line2, normal;
 
-  line1.x = tri.p[1].x - tri.p[0].x;
-  line1.y = tri.p[1].y - tri.p[0].y;
-  line1.z = tri.p[1].z - tri.p[0].z;
-
-  line2.x = tri.p[2].x - tri.p[0].x;
-  line2.y = tri.p[2].y - tri.p[0].y;
-  line2.z = tri.p[2].z - tri.p[0].z;
+  line1 = SubtractVector(tri.p[1], tri.p[0]);
+  line2 = SubtractVector(tri.p[2], tri.p[0]);
 
   normal.x = (line1.y * line2.z) - (line2.y * line1.z);
   normal.y = (line1.z * line2.x) - (line2.z * line1.x);
@@ -78,6 +94,24 @@ VecMath::SubtractVector(vec3d& v1, vec3d& v2)
   res.x = v1.x - v2.x;
   res.y = v1.y - v2.y;
   res.z = v1.z - v2.z;
+  return res;
+}
+
+vec3d VecMath::AddVector(vec3d &v1, vec3d &v2)
+{
+  vec3d res;
+  res.x = v1.x + v2.x;
+  res.y = v1.y + v2.y;
+  res.z = v1.z + v2.z;
+  return res;
+}
+
+vec3d VecMath::ScaleVector(vec3d &v1, vec3d &v2)
+{
+  vec3d res;
+  res.x = v1.x * v2.x;
+  res.y = v1.y * v2.y;
+  res.z = v1.z * v2.z;
   return res;
 }
 
