@@ -1,8 +1,10 @@
 #pragma once
+#include <SDL3/SDL.h>
 
 struct vec3d
 {
   float x, y, z;
+  SDL_FColor color;
 };
 
 struct triangle

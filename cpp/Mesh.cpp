@@ -1,5 +1,4 @@
 #include "Mesh.h"
-#include <sstream>
 #include <fstream>
 
 void
@@ -64,11 +63,11 @@ void Mesh::LoadFromObj(std::string fileName)
 
       else if (type == "f")
       {
-        int a, b, c;
+        std::string a, b, c;
 
         if (s >> a >> b >> c)
         {
-          tris.push_back({verts[a - 1], verts[b - 1], verts[c - 1]});
+          tris.push_back({verts[ParseFace(a, '/').vertexNum - 1], verts[ParseFace(b, '/').vertexNum - 1], verts[ParseFace(c, '/').vertexNum - 1]});
         }
       }
     }
@@ -77,4 +76,22 @@ void Mesh::LoadFromObj(std::string fileName)
   {
     std::cerr << "Error code: " << strerror(errno);
   }
+}
+
+FaceValue Mesh::ParseFace(std::string word, char delimiter)
+{
+  FaceValue faceValue;
+  std::string token;
+  std::stringstream ss(word);
+
+  std::getline(ss, token, delimiter);
+  faceValue.vertexNum = std::stoi(token);
+
+  std::getline(ss, token, delimiter);
+  faceValue.texcoord = std::stoi(token);
+
+  std::getline(ss, token, delimiter);
+  faceValue.normal = std::stoi(token);
+
+  return faceValue;
 }

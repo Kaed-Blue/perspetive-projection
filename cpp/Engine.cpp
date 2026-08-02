@@ -31,8 +31,8 @@ void
 Engine::run()
 {
   Mesh cube;
-  cube.CreateCube();
-  // cube.LoadFromObj("../obj/tetrahedron.obj");
+  // cube.CreateCube();
+  cube.LoadFromObj("../Obj/utah_teapot.obj");
 
   bool running = true;
   while (running) {
@@ -49,9 +49,9 @@ Engine::run()
     SDL_SetRenderDrawColor(sdlRenderer, 255, 255, 255, 255);
 
     frame += 1;
-    if (frame > 720) {
-      frame = 0;
-    }
+    // if (frame > 720) { // FIXME: not cool
+    //   frame = 0;
+    // }
 
     Erenderer->DrawMesh(cube.tris, frame, Ecamera->GetCameraPos());
     SDL_RenderPresent(sdlRenderer);

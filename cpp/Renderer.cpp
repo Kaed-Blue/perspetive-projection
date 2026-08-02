@@ -1,11 +1,12 @@
 #include "Renderer.h"
 #include "VecMath.h"
+#include "algorithm"
 
 Renderer::Renderer(SDL_Renderer* sdlrenderer)
   : sdlrenderer(sdlrenderer)
 {
   int w, h;
-  SDL_GetRenderOutputSize(sdlrenderer, &w, &h);
+  SDL_GetRenderOutputSize(sdlrenderer, &w, &h); // FIXME: aspect ratio not working?
   aspectRatio = static_cast<float>(w) / h;
   fFovRad = 1.0f / tanf(fFov * 0.5f / 180.0f * 3.14159f);
   matproj.m[0][0] = aspectRatio * fFovRad;
@@ -43,13 +44,15 @@ Renderer::DrawMesh(std::vector<triangle> mesh, int frame, vec3d cameraPos)
   VecMath::RotationZ(matRotZ, angel, 1);
 
   mat4x4 matRotated = matRotX * matRotY * matRotZ; // using "*" as MultiplyMatrices
+  std::vector<triangle> vectriprojeted;
 
-  for (auto tri : mesh) {
+  for (triangle tri : mesh)
+  {
     triangle triProjected, triTranslated;
     for (int i = 0; i < 3; i++) {
       vec3d pointRotated = VecMath::MultiplyMatrixVector(tri.p[i], matRotated);
       triTranslated.p[i] = pointRotated;
-      triTranslated.p[i].z += 15.0f;
+      triTranslated.p[i].z += 50.0f;
     }
 
     vec3d normal = VecMath::GetNormal(triTranslated);
@@ -74,24 +77,35 @@ Renderer::DrawMesh(std::vector<triangle> mesh, int frame, vec3d cameraPos)
       }
 
       SDL_FColor Lum = Rilumination.ShadowValue(normal);
+      triProjected.p->color = Lum;
 
-      SDL_Vertex vertex[3];
-      vertex[0].position = { triProjected.p[0].x, triProjected.p[0].y };
-      vertex[0].color = Lum;
-      vertex[1].position = { triProjected.p[1].x, triProjected.p[1].y };
-      vertex[1].color = Lum;
-      vertex[2].position = { triProjected.p[2].x, triProjected.p[2].y };
-      vertex[2].color = Lum;
-
-      SDL_RenderGeometry(sdlrenderer, NULL, vertex, 3, NULL, 0);
-
-      // DrawTriangle(sdlrenderer,
-      //              triProjected.p[0].x,
-      //              triProjected.p[0].y,
-      //              triProjected.p[1].x,
-      //              triProjected.p[1].y,
-      //              triProjected.p[2].x,
-      //              triProjected.p[2].y);
+      vectriprojeted.push_back(triProjected);
     }
+  }
+
+  sort(vectriprojeted.begin(), vectriprojeted.end(), [](const triangle &tri1, const triangle &tri2) // lambda
+       { float z1Avg = tri1.p[0].z + tri1.p[1].z + tri1.p[2].z;
+         float z2Avg = tri2.p[0].z + tri2.p[1].z + tri2.p[2].z;
+         return z1Avg < z2Avg; });
+
+  for (triangle triProjected : vectriprojeted)
+  {
+    SDL_Vertex vertex[3];
+    vertex[0].position = {triProjected.p[0].x, triProjected.p[0].y};
+    vertex[0].color = triProjected.p->color;
+    vertex[1].position = {triProjected.p[1].x, triProjected.p[1].y};
+    vertex[1].color = triProjected.p->color;
+    vertex[2].position = {triProjected.p[2].x, triProjected.p[2].y};
+    vertex[2].color = triProjected.p->color;
+
+    SDL_RenderGeometry(sdlrenderer, NULL, vertex, 3, NULL, 0);
+
+    // DrawTriangle(sdlrenderer,
+    //              triProjected.p[0].x,
+    //              triProjected.p[0].y,
+    //              triProjected.p[1].x,
+    //              triProjected.p[1].y,
+    //              triProjected.p[2].x,
+    //              triProjected.p[2].y);
   }
 }
