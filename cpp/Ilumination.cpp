@@ -3,14 +3,19 @@
 
 vec3d Ilumination::GetLightRay()
 {
-  return lightRay;
+  return lightDir;
+}
+
+void Ilumination::SetLightDir(vec3d lightDir)
+{
+  this->lightDir = lightDir;
 }
 
 SDL_FColor
 Ilumination::ShadowValue(vec3d &normal)
 {
-  VecMath::Normalize(lightRay);
-  float LumDP = VecMath::DotProduct(normal, lightRay);
+  VecMath::Normalize(this->lightDir);
+  float LumDP = VecMath::DotProduct(normal, this->lightDir);
   int ilum = LumDP * -10;
   switch (ilum)
   {

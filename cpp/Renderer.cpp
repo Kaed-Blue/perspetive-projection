@@ -3,6 +3,7 @@
 #include "algorithm"
 #include "Mesh.h"
 #include "Camera.h"
+#include "Ilumination.h"
 
 Renderer::Renderer(SDL_Renderer* sdlrenderer)
   : sdlrenderer(sdlrenderer)
@@ -97,9 +98,10 @@ void Renderer::DrawMesh(Mesh mesh, vec3d angel, const Camera &camera, vec3d objP
         // triProjected.p[i].x += 100.0f;            // moves everything in x
         // triProjected.p[i].y += 100.0f;            // moves everything in y
       }
-
+      Ilumination ilumination;
+      ilumination.SetLightDir({-1, 0, -1});
       SDL_FColor Lum = ilumination.ShadowValue(normal);
-      triProjected.p->color = {1, 1, 1, 1}; // chsnge to Lum
+      triProjected.p->color = Lum; // chsnge to Lum
       vectriprojeted.push_back(triProjected);
     }
   }
