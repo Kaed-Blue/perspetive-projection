@@ -44,6 +44,9 @@ Ilumination::ShadowValue(vec3d &normal)
   case 9:
     return {0.999, 0.999, 0.999, 1};
 
+  case 10:
+    return {1, 1, 1, 1};
+
   default:
     return {0, 0, 0, 1};
   }
