@@ -56,16 +56,13 @@ VecMath::MakeIdentity()
   return mat;
 }
 
-vec3d VecMath::GetVectorNormal(triangle &tri) // gives normalized cross product
+vec3d VecMath::GetVectorNormal(const vec3d &vec1, const vec3d &vec2) // gives normalized cross product
 {
-  vec3d line1, line2, normal;
+  vec3d normal;
 
-  line1 = SubtractVector(tri.p[1], tri.p[0]);
-  line2 = SubtractVector(tri.p[2], tri.p[0]);
-
-  normal.x = (line1.y * line2.z) - (line2.y * line1.z);
-  normal.y = (line1.z * line2.x) - (line2.z * line1.x);
-  normal.z = (line1.x * line2.y) - (line2.x * line1.y);
+  normal.x = (vec1.y * vec2.z) - (vec2.y * vec1.z);
+  normal.y = (vec1.z * vec2.x) - (vec2.z * vec1.x);
+  normal.z = (vec1.x * vec2.y) - (vec2.x * vec1.y);
 
   Normalize(normal);
 
@@ -76,19 +73,20 @@ void
 VecMath::Normalize(vec3d& vec)
 {
   float magnitude = sqrtf(vec.x * vec.x + vec.y * vec.y + vec.z * vec.z);
-  vec.x /= magnitude;
-  vec.y /= magnitude;
-  vec.z /= magnitude;
+  if (magnitude != 0)
+  {
+    vec.x /= magnitude;
+    vec.y /= magnitude;
+    vec.z /= magnitude;
+  }
 }
 
-float
-VecMath::DotProduct(vec3d& v1, vec3d& v2)
+float VecMath::DotProduct(const vec3d &v1, const vec3d &v2)
 {
   return v1.x * v2.x + v1.y * v2.y + v1.z * v2.z;
 }
 
-vec3d
-VecMath::SubtractVector(vec3d& v1, vec3d& v2)
+vec3d VecMath::SubtractVector(const vec3d &v1, const vec3d &v2)
 {
   vec3d res;
   res.x = v1.x - v2.x;
@@ -97,7 +95,7 @@ VecMath::SubtractVector(vec3d& v1, vec3d& v2)
   return res;
 }
 
-vec3d VecMath::AddVector(vec3d &v1, vec3d &v2)
+vec3d VecMath::AddVector(const vec3d &v1, const vec3d &v2)
 {
   vec3d res;
   res.x = v1.x + v2.x;
@@ -106,7 +104,7 @@ vec3d VecMath::AddVector(vec3d &v1, vec3d &v2)
   return res;
 }
 
-vec3d VecMath::ScaleVector(vec3d &v1, vec3d &v2)
+vec3d VecMath::ScaleVector(const vec3d &v1, const vec3d &v2) // make it so it can take in a number as v2
 {
   vec3d res;
   res.x = v1.x * v2.x;
@@ -115,32 +113,32 @@ vec3d VecMath::ScaleVector(vec3d &v1, vec3d &v2)
   return res;
 }
 
-void VecMath::RotationX(mat4x4 &mat, float angel, float speed)
+void VecMath::RotationX(mat4x4 &mat, const float angel)
 {
   mat.m[0][0] = 1;
-  mat.m[1][1] = cosf(angel * speed);
-  mat.m[1][2] = sinf(angel * speed);
-  mat.m[2][1] = -sinf(angel * speed);
-  mat.m[2][2] = cosf(angel * speed);
+  mat.m[1][1] = cosf(angel);
+  mat.m[1][2] = sinf(angel);
+  mat.m[2][1] = -sinf(angel);
+  mat.m[2][2] = cosf(angel);
   mat.m[3][3] = 1;
 }
 
-void VecMath::RotationY(mat4x4 &mat, float angel, float speed)
+void VecMath::RotationY(mat4x4 &mat, const float angel)
 {
-  mat.m[0][0] = cosf(angel * speed);
-  mat.m[0][2] = sinf(angel * speed);
+  mat.m[0][0] = cosf(angel);
+  mat.m[0][2] = sinf(angel);
   mat.m[1][1] = 1;
-  mat.m[2][0] = -sinf(angel * speed);
-  mat.m[2][2] = cosf(angel * speed);
+  mat.m[2][0] = -sinf(angel);
+  mat.m[2][2] = cosf(angel);
   mat.m[3][3] = 1;
 }
 
-void VecMath::RotationZ(mat4x4 &mat, float angel, float speed)
+void VecMath::RotationZ(mat4x4 &mat, const float angel)
 {
-  mat.m[0][0] = cosf(angel * speed);
-  mat.m[0][1] = sinf(angel * speed);
-  mat.m[1][0] = -sinf(angel * speed);
-  mat.m[1][1] = cosf(angel * speed);
+  mat.m[0][0] = cosf(angel);
+  mat.m[0][1] = sinf(angel);
+  mat.m[1][0] = -sinf(angel);
+  mat.m[1][1] = cosf(angel);
   mat.m[2][2] = 1;
   mat.m[3][3] = 1;
 }

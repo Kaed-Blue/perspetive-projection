@@ -12,21 +12,21 @@ public:
 
   static mat4x4 MakeIdentity();
 
-  static vec3d GetVectorNormal(triangle &tri);
+  static vec3d GetVectorNormal(const vec3d &vec1, const vec3d &vec2);
 
   static void Normalize(vec3d &vec);
 
-  static float DotProduct(vec3d &v1, vec3d &v2);
+  static float DotProduct(const vec3d &v1, const vec3d &v2);
 
-  static vec3d SubtractVector(vec3d &v1, vec3d &v2);
+  static vec3d SubtractVector(const vec3d &v1, const vec3d &v2);
 
-  static vec3d AddVector(vec3d &v1, vec3d &v2);
+  static vec3d AddVector(const vec3d &v1, const vec3d &v2);
 
-  static vec3d ScaleVector(vec3d &v1, vec3d &v2);
+  static vec3d ScaleVector(const vec3d &v1, const vec3d &v2);
 
-  static void RotationX(mat4x4 &mat, float theta, float speed);
+  static void RotationX(mat4x4 &mat, const float theta);
 
-  static void RotationY(mat4x4 &mat, float theta, float speed);
+  static void RotationY(mat4x4 &mat, const float theta);
 
-  static void RotationZ(mat4x4 &mat, float theta, float speed);
+  static void RotationZ(mat4x4 &mat, const float theta);
 };

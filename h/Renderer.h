@@ -6,6 +6,7 @@
 #include <vector>
 
 class Mesh;
+class Camera;
 
 class Renderer
 {
@@ -16,8 +17,8 @@ private:
   float FovRad = 1.0f / tanf(Fov * 0.5f / 180.0f * 3.14159f);
   float aspectRatio;
   SDL_Renderer *sdlrenderer;
-  Ilumination Rilumination;
-  mat4x4 matproj;
+  Ilumination ilumination;
+  mat4x4 matProj;
   mat4x4 matRotX, matRotY, matRotZ;
 
 public:
@@ -31,5 +32,5 @@ public:
                     int c_x,
                     int c_y);
 
-  void DrawMesh(Mesh mesh, int frame, vec3d cameraPos, vec3d objPos);
+  void DrawMesh(Mesh mesh, vec3d angel, const Camera &camera, vec3d objPos);
 };
