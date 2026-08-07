@@ -3,7 +3,7 @@
 
 struct vec3d
 {
-  float x, y, z;
+  float x = 0, y = 0, z = 0;
   SDL_FColor color;
 };
 
@@ -16,3 +16,4 @@ struct mat4x4
 {
   float m[4][4] = { 0 };
 };
+// TODO: make cout able to show vec3d
