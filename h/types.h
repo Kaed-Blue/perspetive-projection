@@ -5,6 +5,36 @@ struct vec3d
 {
   float x = 0, y = 0, z = 0;
   SDL_FColor color;
+
+  vec3d operator+(const vec3d& other) const
+  {
+    return {this->x + other.x, this->y + other.y, this->z + other.z};
+  }
+
+  vec3d operator+=(const vec3d& other)
+  {
+    return {this->x += other.x, this->y += other.y, this->z += other.z};
+  }
+
+  vec3d operator-(const vec3d& other) const
+  {
+    return {this->x - other.x, this->y - other.y, this->z - other.z};
+  }
+
+  vec3d operator-=(const vec3d& other)
+  {
+    return {this->x -= other.x, this->y -= other.y, this->z -= other.z};
+  }
+
+  vec3d operator*(const vec3d& other) const
+  {
+    return {this->x * other.x, this->y * other.y, this->z * other.z};
+  }
+
+  vec3d operator*(const float other) const
+  {
+    return {this->x * other, this->y * other, this->z * other};
+  }
 };
 
 struct triangle
