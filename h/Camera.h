@@ -17,8 +17,9 @@ public:
   vec3d GetRight() const;
   vec3d GetUp() const;
 
-  void MoveCameraWorld(const float x, const float y, const float z);
-  void TeleportCamera(const float x, const float y, const float z);
+  void MoveCameraWorld(const vec3d move);
+  void TeleportCameraWorld(const vec3d location);
+  void MoveCameraLocal(const vec3d move);
   void ChangeYawBy(const float x);
 
   mat4x4 MakeViewMatrix() const;

@@ -19,14 +19,11 @@ public:
   static float DotProduct(const vec3d &v1, const vec3d &v2);
 
   static vec3d SubtractVector(const vec3d &v1, const vec3d &v2);
-
   static vec3d AddVector(const vec3d &v1, const vec3d &v2);
-
   static vec3d ScaleVector(const vec3d &v1, const vec3d &v2);
+  static vec3d ScaleVector(const vec3d &v, const float x);
 
   static void RotationX(mat4x4 &mat, const float theta);
-
   static void RotationY(mat4x4 &mat, const float theta);
-
   static void RotationZ(mat4x4 &mat, const float theta);
 };

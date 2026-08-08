@@ -17,18 +17,24 @@ float Camera::GetYaw() const
   return this->yaw;
 }
 
-void Camera::MoveCameraWorld(const float x, const float y, const float z)
+void Camera::MoveCameraWorld(const vec3d move) // not so sure about this
 {
-  this->position.x += x;
-  this->position.y += y;
-  this->position.z += z;
+  this->position += move;
 }
 
-void Camera::TeleportCamera(const float x, const float y, const float z)
+void Camera::TeleportCameraWorld(const vec3d location)
 {
-  this->position.x = x;
-  this->position.y = y;
-  this->position.z = z;
+  this->position = location;
+}
+
+void Camera::MoveCameraLocal(const vec3d location)
+{
+  vec3d right = this->GetRight();
+  vec3d up = this->GetUp();
+
+  this->position += (right * location.x);
+  this->position += (up * location.y);
+  this->position += (this->forward * location.z);
 }
 
 void Camera::ChangeYawBy(const float x)
@@ -39,7 +45,6 @@ void Camera::ChangeYawBy(const float x)
   VecMath::RotationY(matCameraRot, this->yaw * 3.14159f / 180.0f);
   vec3d lookDir = VecMath::MultiplyMatrixVector(target, matCameraRot);
   std::cout << lookDir.x << "/" << lookDir.y << "/" << lookDir.z << "\n";
-  ;
   this->forward = lookDir;
 }
 

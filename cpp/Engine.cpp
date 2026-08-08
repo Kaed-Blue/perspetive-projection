@@ -32,6 +32,7 @@ Engine::Initialize()
 void
 Engine::run()
 {
+  // Load Objects
   Mesh cube;
   // cube.CreateCube();
   cube.LoadFromObj("../Obj/utah_teapot.obj");
@@ -42,6 +43,7 @@ Engine::run()
   bool running = true;
   while (running) {
 
+    // Get elapsed time since last frame
     Uint64 currentCounter = SDL_GetPerformanceCounter(); // TODO: go find how this works
     float elapsedTime = (float)(currentCounter - lastCounter) / SDL_GetPerformanceFrequency();
     lastCounter = currentCounter;
@@ -56,42 +58,42 @@ Engine::run()
     SDL_RenderClear(sdlRenderer);
     SDL_SetRenderDrawColor(sdlRenderer, 255, 255, 255, 255);
 
+    // Set universal speed
     float dm = elapsedTime * 10;
 
+    // Camera movement
     const bool *keyStates = SDL_GetKeyboardState(NULL);
     if (keyStates[SDL_SCANCODE_D])
     {
-      Ecamera->MoveCameraWorld(dm, 0, 0);
+      Ecamera->MoveCameraLocal({-dm, 0, 0});
     }
 
     if (keyStates[SDL_SCANCODE_A])
     {
-      Ecamera->MoveCameraWorld(-dm, 0, 0);
+      Ecamera->MoveCameraLocal({dm, 0, 0});
     }
 
     if (keyStates[SDL_SCANCODE_W])
     {
-      Ecamera->MoveCameraWorld(0, dm, 0);
+      Ecamera->MoveCameraLocal({0, dm, 0});
     }
 
     if (keyStates[SDL_SCANCODE_S])
     {
-      Ecamera->MoveCameraWorld(0, -dm, 0);
+      Ecamera->MoveCameraLocal({0, -dm, 0});
     }
 
-    vec3d scale = {dm * 10, dm * 10, dm * 10}; // FIXME: maybe you can make this look better
     if (keyStates[SDL_SCANCODE_C])
     {
-      vec3d temp = VecMath::AddVector(Ecamera->GetCameraPos(), VecMath::ScaleVector(Ecamera->GetForward(), scale));
-      Ecamera->TeleportCamera(temp.x, temp.y, temp.z);
+      Ecamera->MoveCameraLocal({0, 0, dm * 5});
     }
 
     if (keyStates[SDL_SCANCODE_X])
     {
-      vec3d temp = VecMath::SubtractVector(Ecamera->GetCameraPos(), VecMath::ScaleVector(Ecamera->GetForward(), scale));
-      Ecamera->TeleportCamera(temp.x, temp.y, temp.z);
+      Ecamera->MoveCameraLocal({0, 0, -dm * 5});
     }
 
+    // Camera diraction
     if (keyStates[SDL_SCANCODE_J])
     {
       Ecamera->ChangeYawBy(dm);

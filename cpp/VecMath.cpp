@@ -104,13 +104,14 @@ vec3d VecMath::AddVector(const vec3d &v1, const vec3d &v2)
   return res;
 }
 
-vec3d VecMath::ScaleVector(const vec3d &v1, const vec3d &v2) // make it so it can take in a number as v2
+vec3d VecMath::ScaleVector(const vec3d &v1, const vec3d &v2)
 {
-  vec3d res;
-  res.x = v1.x * v2.x;
-  res.y = v1.y * v2.y;
-  res.z = v1.z * v2.z;
-  return res;
+  return {v1.x * v2.x, v1.y * v2.y, v1.z * v2.z};
+}
+
+vec3d VecMath::ScaleVector(const vec3d &v, const float x)
+{
+  return {v.x * x, v.y * x, v.z * x};
 }
 
 void VecMath::RotationX(mat4x4 &mat, const float angel)

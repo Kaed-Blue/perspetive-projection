@@ -40,7 +40,7 @@ operator*(const mat4x4 &mat1, const mat4x4 &mat2) // operator overloading
   return VecMath::MultiplyMatrices(mat1, mat2);
 }
 
-void Renderer::DrawMesh(Mesh mesh, vec3d angel, const Camera &camera, vec3d objPos) // FIXME: some partitioning maybe
+void Renderer::DrawMesh(Mesh mesh, vec3d angel, const Camera &camera, vec3d objPos) // FIXME: Some partitioning maybe
 {
   std::vector<triangle> vectriprojeted;
   mat4x4 worldMat = VecMath::MakeIdentity();
@@ -55,39 +55,45 @@ void Renderer::DrawMesh(Mesh mesh, vec3d angel, const Camera &camera, vec3d objP
 
   std::cout << camera.GetCameraPos().x << "/" << camera.GetCameraPos().y << "/" << camera.GetCameraPos().z << "\n";
 
-  // camera view matrix
-  vec3d target = VecMath::AddVector(camera.GetCameraPos(), camera.GetForward());
+  // Camera view matrix
+  // vec3d target = VecMath::AddVector(camera.GetCameraPos(), camera.GetForward()); TODO: SUS
   mat4x4 viewMatrix = camera.MakeViewMatrix();
 
+  // Combine every transformation in the same matrix
   worldMat = matRotX * matRotY * matRotZ * matTrans; // using "*" as MultiplyMatrices
 
   for (triangle tri : mesh.tris)
   {
     triangle triProjected, triTransformed, triViewed;
+
+    // Apply translation and roatation
     for (int i = 0; i < 3; i++)
     {
       triTransformed.p[i] = VecMath::MultiplyMatrixVector(tri.p[i], worldMat);
     }
 
     vec3d line1, line2;
-    line1 = VecMath::SubtractVector(triTransformed.p[1], triTransformed.p[0]);
-    line2 = VecMath::SubtractVector(triTransformed.p[2], triTransformed.p[0]);
+    line1 = triTransformed.p[1] - triTransformed.p[0];
+    line2 = triTransformed.p[2] - triTransformed.p[0];
 
     vec3d normal = VecMath::GetVectorNormal(line1, line2);
-    vec3d cameraRay = VecMath::SubtractVector(triTransformed.p[0], camera.GetCameraPos());
-    float dotProduct = VecMath::DotProduct(normal, cameraRay);
+    vec3d cameraRay = triTransformed.p[0] - camera.GetCameraPos();
+    float alignValue = VecMath::DotProduct(normal, cameraRay);
 
+    // Bring into camera view
     for (int i = 0; i < 3; i++)
     {
       triViewed.p[i] = VecMath::MultiplyMatrixVector(triTransformed.p[i], viewMatrix);
     }
 
-    // project into screen space (3D -> 2D)
-    if (dotProduct > 0) {
+    // Project into screen space (3D -> 2D)
+    if (alignValue > 0)
+    {
       for (int i = 0; i < 3; i++) {
         triProjected.p[i] = VecMath::MultiplyMatrixVector(triViewed.p[i], matProj);
       }
 
+      // NDC to pixels
       int w, h;
       SDL_GetRenderOutputSize(sdlrenderer, &w, &h); // TODO: put in a func this is messy
       for (int i = 0; i < 3; i++) {
@@ -95,23 +101,27 @@ void Renderer::DrawMesh(Mesh mesh, vec3d angel, const Camera &camera, vec3d objP
         triProjected.p[i].y += 1.0f;
         triProjected.p[i].x *= 0.5f * (float)w; // scales into pixel [0, w] and [0, h]
         triProjected.p[i].y *= 0.5f * (float)h;
-        // triProjected.p[i].x += 100.0f;            // moves everything in x
-        // triProjected.p[i].y += 100.0f;            // moves everything in y
       }
+
+      // Lighting
       Ilumination ilumination;
-      ilumination.SetLightDir({-1, 0, -1});
+      ilumination.SetLightDir({0, 0, -1});
       SDL_FColor Lum = ilumination.ShadowValue(normal);
       triProjected.p->color = Lum; // chsnge to Lum
+
+      // Store
       vectriprojeted.push_back(triProjected);
     }
   }
 
+  // Sorting tris from back(+z) to front(-z)
   sort(vectriprojeted.begin(), vectriprojeted.end(),
        [](const triangle &tri1, const triangle &tri2) // lambda
        {float z1Avg = tri1.p[0].z + tri1.p[1].z + tri1.p[2].z;
         float z2Avg = tri2.p[0].z + tri2.p[1].z + tri2.p[2].z;
         return z1Avg < z2Avg; });
 
+  // Assining to SDL_Vertex so it can be drawn by RenderGeometry
   for (triangle triProjected : vectriprojeted)
   {
     SDL_Vertex vertex[3];
@@ -122,14 +132,16 @@ void Renderer::DrawMesh(Mesh mesh, vec3d angel, const Camera &camera, vec3d objP
     vertex[2].position = {triProjected.p[2].x, triProjected.p[2].y};
     vertex[2].color = triProjected.p->color;
 
+    // Drawing
     SDL_RenderGeometry(sdlrenderer, NULL, vertex, 3, NULL, 0);
 
-    DrawTriangle(sdlrenderer,
-                 triProjected.p[0].x,
-                 triProjected.p[0].y,
-                 triProjected.p[1].x,
-                 triProjected.p[1].y,
-                 triProjected.p[2].x,
-                 triProjected.p[2].y);
+    //   DrawTriangle(sdlrenderer,
+    //                triProjected.p[0].x,
+    //                triProjected.p[0].y,
+    //                triProjected.p[1].x,
+    //                triProjected.p[1].y,
+    //                triProjected.p[2].x,
+    //                triProjected.p[2].y);
+    //
   }
 }
