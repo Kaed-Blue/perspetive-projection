@@ -1,5 +1,6 @@
 #include "VecMath.h"
 #include <math.h>
+#include <iostream> // TODO: make debug.cpp
 
 vec3d
 VecMath::MultiplyMatrixVector(const vec3d& i, const mat4x4& m)
@@ -10,7 +11,9 @@ VecMath::MultiplyMatrixVector(const vec3d& i, const mat4x4& m)
   o.z = i.x * m.m[0][2] + i.y * m.m[1][2] + i.z * m.m[2][2] + m.m[3][2];
   float w = i.x * m.m[0][3] + i.y * m.m[1][3] + i.z * m.m[2][3] + m.m[3][3];
 
-  if (w != 0.0f) {
+  // TODO: this should have it's own function
+  if (w != 0.0f)
+  {
     o.x /= w;
     o.y /= w;
     o.z /= w;
@@ -56,7 +59,7 @@ VecMath::MakeIdentity()
   return mat;
 }
 
-vec3d VecMath::GetVectorNormal(const vec3d &vec1, const vec3d &vec2) // gives normalized cross product
+vec3d VecMath::CrossProduct(const vec3d &vec1, const vec3d &vec2) // gives normalized cross product
 {
   vec3d normal;
 
@@ -64,21 +67,26 @@ vec3d VecMath::GetVectorNormal(const vec3d &vec1, const vec3d &vec2) // gives no
   normal.y = (vec1.z * vec2.x) - (vec2.z * vec1.x);
   normal.z = (vec1.x * vec2.y) - (vec2.x * vec1.y);
 
-  Normalize(normal);
-
   return normal;
 }
 
-void
-VecMath::Normalize(vec3d& vec)
+vec3d &
+VecMath::Normalize(vec3d &vec)
 {
-  float magnitude = sqrtf(vec.x * vec.x + vec.y * vec.y + vec.z * vec.z);
-  if (magnitude != 0)
+  float Length = sqrtf(vec.x * vec.x + vec.y * vec.y + vec.z * vec.z);
+  if (Length > 0)
   {
-    vec.x /= magnitude;
-    vec.y /= magnitude;
-    vec.z /= magnitude;
+    vec.x /= Length;
+    vec.y /= Length;
+    vec.z /= Length;
   }
+  return vec;
+}
+
+vec3d VecMath::GetNormalized(vec3d vec)
+{
+  Normalize(vec);
+  return vec;
 }
 
 float VecMath::DotProduct(const vec3d &v1, const vec3d &v2)
@@ -112,6 +120,11 @@ vec3d VecMath::ScaleVector(const vec3d &v1, const vec3d &v2)
 vec3d VecMath::ScaleVector(const vec3d &v, const float x)
 {
   return {v.x * x, v.y * x, v.z * x};
+}
+
+void VecMath::CoutVec(const vec3d &v) // this is temporary
+{
+  std::cout << v.x << "/" << v.y << "/" << v.z << "\n";
 }
 
 void VecMath::RotationX(mat4x4 &mat, const float angel)
