@@ -17,17 +17,17 @@ float Camera::GetYaw() const
   return this->yaw;
 }
 
-void Camera::MoveCameraWorld(const vec3d move) // not so sure about this
+void Camera::MoveCameraWorld(const vec3d &move) // not so sure about this
 {
   this->position += move;
 }
 
-void Camera::TeleportCameraWorld(const vec3d location)
+void Camera::TeleportCameraWorld(const vec3d &location)
 {
   this->position = location;
 }
 
-void Camera::MoveCameraLocal(const vec3d location)
+void Camera::MoveCameraLocal(const vec3d &location)
 {
   vec3d right = this->GetRight();
   vec3d up = this->GetUp();
@@ -37,27 +37,41 @@ void Camera::MoveCameraLocal(const vec3d location)
   this->position += (this->forward * location.z);
 }
 
-void Camera::ChangeYawBy(const float x)
+void Camera::TeleportCameraLocal(const vec3d &location)
 {
-  this->yaw += x;
-  vec3d target = {0, 0, 1};
-  mat4x4 matCameraRot = VecMath::MakeIdentity();
-  VecMath::RotationY(matCameraRot, this->yaw * 3.14159f / 180.0f);
-  vec3d lookDir = VecMath::MultiplyMatrixVector(target, matCameraRot);
-  std::cout << lookDir.x << "/" << lookDir.y << "/" << lookDir.z << "\n";
-  this->forward = lookDir;
+  vec3d right = this->GetRight();
+  vec3d up = this->GetUp();
+
+  this->position = (right * location.x) + (up * location.y) + (this->forward * location.z);
+}
+
+void Camera::ChangeDiraction(const vec3d &theta)
+{
+  vec3d baseForward = {0, 0, 1};
+  mat4x4 CameraRot = VecMath::MakeIdentity();
+  mat4x4 rotX = VecMath::MakeIdentity();
+  mat4x4 rotY = VecMath::MakeIdentity();
+  this->pitch += theta.x;
+  this->yaw += theta.y;
+
+  VecMath::RotationX(rotX, this->pitch * 3.14159f / 180.0f);
+  VecMath::RotationY(rotY, this->yaw * 3.14159f / 180.0f);
+  CameraRot = rotX * rotY;
+
+  this->forward = VecMath::MultiplyMatrixVector(baseForward, CameraRot);
+  // VecMath::Normalize(this->forward); // keep an eye
 }
 
 vec3d Camera::GetRight() const
 {
   vec3d up = {0, 1, 0};
-  return VecMath::GetVectorNormal(up, this->forward);
+  return VecMath::GetNormalized(VecMath::CrossProduct(up, this->forward));
 }
 
 vec3d Camera::GetUp() const
 {
   vec3d right = GetRight();
-  return VecMath::GetVectorNormal(this->forward, right); // maybe normalize for good measure
+  return VecMath::GetNormalized(VecMath::CrossProduct(this->forward, right)); // do you even need to normalize?
 }
 
 mat4x4
@@ -66,22 +80,21 @@ Camera::MakeViewMatrix() const
   vec3d right = this->GetRight();
   vec3d newUp = this->GetUp();
 
-  // std::cout << newUp.x << "/" << newUp.y << "/" << newUp.z << "\n";
-  // std::cout << right.x << "/" << right.y << "/" << right.z << "\n";
+  std::cout << "forward: " << forward.x << "/" << forward.y << "/" << forward.z << "\n";
 
   mat4x4 viewMatrix;
   viewMatrix.m[0][0] = right.x;
   viewMatrix.m[1][0] = right.y;
   viewMatrix.m[2][0] = right.z;
-  viewMatrix.m[3][0] = -VecMath::DotProduct(this->position, right);
+  viewMatrix.m[3][0] = -VecMath::DotProduct(right, this->position);
   viewMatrix.m[0][1] = newUp.x;
   viewMatrix.m[1][1] = newUp.y;
   viewMatrix.m[2][1] = newUp.z;
-  viewMatrix.m[3][1] = -VecMath::DotProduct(this->position, newUp);
+  viewMatrix.m[3][1] = -VecMath::DotProduct(newUp, this->position);
   viewMatrix.m[0][2] = this->forward.x;
   viewMatrix.m[1][2] = this->forward.y;
   viewMatrix.m[2][2] = this->forward.z;
-  viewMatrix.m[3][2] = -VecMath::DotProduct(this->position, this->forward);
+  viewMatrix.m[3][2] = -VecMath::DotProduct(this->forward, this->position);
   viewMatrix.m[3][3] = 1;
 
   return viewMatrix;

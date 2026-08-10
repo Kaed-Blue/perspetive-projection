@@ -65,43 +65,63 @@ Engine::run()
     const bool *keyStates = SDL_GetKeyboardState(NULL);
     if (keyStates[SDL_SCANCODE_D])
     {
-      Ecamera->MoveCameraLocal({-dm, 0, 0});
+      Ecamera->MoveCameraLocal({dm, 0, 0});
     }
 
     if (keyStates[SDL_SCANCODE_A])
     {
-      Ecamera->MoveCameraLocal({dm, 0, 0});
+      Ecamera->MoveCameraLocal({-dm, 0, 0});
     }
 
     if (keyStates[SDL_SCANCODE_W])
     {
-      Ecamera->MoveCameraLocal({0, dm, 0});
+      Ecamera->MoveCameraLocal({0, 0, dm});
     }
 
     if (keyStates[SDL_SCANCODE_S])
     {
-      Ecamera->MoveCameraLocal({0, -dm, 0});
+      Ecamera->MoveCameraLocal({0, 0, -dm});
     }
 
     if (keyStates[SDL_SCANCODE_C])
     {
-      Ecamera->MoveCameraLocal({0, 0, dm * 5});
+      Ecamera->MoveCameraLocal({0, dm, 0});
     }
 
     if (keyStates[SDL_SCANCODE_X])
     {
-      Ecamera->MoveCameraLocal({0, 0, -dm * 5});
+      Ecamera->MoveCameraLocal({0, -dm, 0});
     }
 
     // Camera diraction
     if (keyStates[SDL_SCANCODE_J])
     {
-      Ecamera->ChangeYawBy(dm);
+      Ecamera->ChangeDiraction({0, dm * 3, 0});
     }
 
     if (keyStates[SDL_SCANCODE_L])
     {
-      Ecamera->ChangeYawBy(-(dm));
+      Ecamera->ChangeDiraction({0, -dm * 3, 0});
+    }
+
+    if (keyStates[SDL_SCANCODE_K])
+    {
+      Ecamera->ChangeDiraction({dm * 3, 0, 0});
+    }
+
+    if (keyStates[SDL_SCANCODE_I])
+    {
+      Ecamera->ChangeDiraction({-dm * 3, 0, 0});
+    }
+
+    if (keyStates[SDL_SCANCODE_U])
+    {
+      Ecamera->ChangeDiraction({0, 0, -dm});
+    }
+
+    if (keyStates[SDL_SCANCODE_O])
+    {
+      Ecamera->ChangeDiraction({0, 0, dm});
     }
 
     static vec3d angel;
@@ -109,7 +129,11 @@ Engine::run()
     angel.y += 20 * elapsedTime * DEG2RAD;
     angel.z += 10 * elapsedTime * DEG2RAD;
 
-    Erenderer->DrawMesh(cube, {0, 0, 0}, *Ecamera, {0, 0, 150});
+    // Ecamera->TeleportCameraWorld({0, 0, 0});
+    Erenderer->DrawMesh(cube, {0, 0, 0}, *Ecamera, {0, 0, 20});
+    // Ecamera->TeleportCameraWorld({10, 0, 0});
+    // Erenderer->DrawLine3D({10, 10, 50}, {0, 0, 50}, *Ecamera);
+    // Erenderer->Draw3DGrid(*Ecamera);
 
     SDL_RenderPresent(sdlRenderer);
   }
