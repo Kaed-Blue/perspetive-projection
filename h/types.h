@@ -6,35 +6,12 @@ struct vec3d
   float x = 0, y = 0, z = 0;
   SDL_FColor color;
 
-  vec3d operator+(const vec3d& other) const
-  {
-    return {this->x + other.x, this->y + other.y, this->z + other.z};
-  }
-
-  vec3d operator+=(const vec3d& other)
-  {
-    return {this->x += other.x, this->y += other.y, this->z += other.z};
-  }
-
-  vec3d operator-(const vec3d& other) const
-  {
-    return {this->x - other.x, this->y - other.y, this->z - other.z};
-  }
-
-  vec3d operator-=(const vec3d& other)
-  {
-    return {this->x -= other.x, this->y -= other.y, this->z -= other.z};
-  }
-
-  vec3d operator*(const vec3d& other) const
-  {
-    return {this->x * other.x, this->y * other.y, this->z * other.z};
-  }
-
-  vec3d operator*(const float other) const
-  {
-    return {this->x * other, this->y * other, this->z * other};
-  }
+  vec3d operator+(const vec3d &other) const;
+  vec3d &operator+=(const vec3d &other);
+  vec3d operator-(const vec3d &other) const;
+  vec3d &operator-=(const vec3d &other);
+  vec3d operator*(const vec3d &other) const;
+  vec3d operator*(const float other) const;
 };
 
 struct triangle
@@ -45,5 +22,8 @@ struct triangle
 struct mat4x4
 {
   float m[4][4] = { 0 };
+
+  mat4x4
+  operator*(const mat4x4 &other) const;
 };
 // TODO: make cout able to show vec3d

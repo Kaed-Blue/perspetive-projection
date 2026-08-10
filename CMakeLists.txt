@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.24)
 project(perspectiveProjection)
 
-set(SOURCE_FILES cpp/main.cpp cpp/Engine.cpp cpp/Mesh.cpp cpp/Renderer.cpp cpp/Camera.cpp cpp/Ilumination.cpp cpp/VecMath.cpp)
+set(SOURCE_FILES cpp/main.cpp cpp/Engine.cpp cpp/Mesh.cpp cpp/Renderer.cpp cpp/Camera.cpp cpp/Ilumination.cpp cpp/VecMath.cpp cpp/types.cpp)
 
 add_executable(main ${SOURCE_FILES})
 
