@@ -14,13 +14,20 @@ private:
   float Far = 1000.0f;
   float Fov = 90.0f;
   float FovRad = 1.0f / tanf(Fov * 0.5f / 180.0f * 3.14159f);
-  float aspectRatio;
+  int w, h;
+  // float aspectRatio;
   SDL_Renderer *sdlrenderer;
   mat4x4 matProj;
   mat4x4 matRotX, matRotY, matRotZ;
 
 public:
   Renderer(SDL_Renderer* sdlrenderer);
+
+  void DrawLine3D(const vec3d &p1, const vec3d &p2, const Camera &camera);
+
+  void DrawGrid3D(const Camera &Camera);
+
+  void NdcToPixels(vec3d &v);
 
   void DrawTriangle(SDL_Renderer* sdlrenderer,
                     int a_x,
