@@ -31,7 +31,7 @@ void Renderer::DrawLine3D(const vec3d &p1, const vec3d &p2, const Camera &camera
   NdcToPixels(p1Projected);
   NdcToPixels(p2Projected);
 
-  SDL_RenderLine(this->sdlrenderer, p1Projected.x, p1Projected.y, p2Projected.x, p2Projected.y);
+  SDL_RenderLine(this->sdlrenderer, p1Projected.x, h - p1Projected.y, p2Projected.x, h - p2Projected.y); // SDL is y down! beware!
 }
 
 void Renderer::DrawGrid3D(const Camera &Camera)
@@ -99,26 +99,27 @@ void Renderer::NdcToPixels(vec3d &v)
   v.y *= 0.5f * h;
 }
 
+// void Renderer::ApplyRotaion(const mat4x4 &mat, const vec3d &angels) {}
+
 void Renderer::DrawMesh(Mesh mesh, vec3d angel, const Camera &camera, vec3d objPos) // FIXME: Some partitioning maybe
 {
   std::vector<triangle> vectriprojeted;
   mat4x4 worldMat = VecMath::MakeIdentity();
 
-  // Rotation matrix
-  VecMath::RotationX(matRotX, angel.x);
-  VecMath::RotationY(matRotY, angel.y);
-  VecMath::RotationZ(matRotZ, angel.z);
-
   // Translation of the object matrix
-  mat4x4 matTrans = VecMath::TranslateMatrix(objPos.x, objPos.y, objPos.z);
+  mat4x4 Translation = VecMath::TranslateMatrix(objPos.x, objPos.y, objPos.z);
 
-  std::cout << "POS: " << camera.GetCameraPos().x << "/" << camera.GetCameraPos().y << "/" << camera.GetCameraPos().z << "\n";
+  // Rotation matrix
+  mat4x4 RotX, RotY, RotZ;
+  VecMath::RotationX(RotX, angel.x);
+  VecMath::RotationY(RotY, angel.y);
+  VecMath::RotationZ(RotZ, angel.z);
 
   // Camera view matrix
   mat4x4 viewMatrix = camera.MakeViewMatrix();
 
   // Combine every transformation in the same matrix
-  worldMat = matTrans * matRotX * matRotY * matRotZ; // using "*" as MultiplyMatrices
+  worldMat = Translation * RotX * RotY * RotZ; // using "*" as MultiplyMatrices
 
   for (triangle tri : mesh.tris)
   {
@@ -159,9 +160,9 @@ void Renderer::DrawMesh(Mesh mesh, vec3d angel, const Camera &camera, vec3d objP
 
       // Lighting
       Ilumination ilumination;
-      ilumination.SetLightDir({0, 0, -1});
+      ilumination.SetLightDir({0, 0, 1});
       SDL_FColor Lum = ilumination.ShadowValue(normal);
-      triProjected.p->color = Lum; // chsnge to Lum
+      triProjected.p->color = Lum;
 
       // Store projected tris
       vectriprojeted.push_back(triProjected);
@@ -173,9 +174,9 @@ void Renderer::DrawMesh(Mesh mesh, vec3d angel, const Camera &camera, vec3d objP
        [](const triangle &tri1, const triangle &tri2) // lambda
        {float z1Avg = tri1.p[0].z + tri1.p[1].z + tri1.p[2].z;
         float z2Avg = tri2.p[0].z + tri2.p[1].z + tri2.p[2].z;
-        return z1Avg < z2Avg; });
+        return z1Avg > z2Avg; });                                          // this was the problem
 
-  // Assining to SDL_Vertex so it can be drawn by RenderGeometry
+  // Assining to SDL_Vertex so it can be drawn by RenderGeometry (not anymore)
   for (triangle triProjected : vectriprojeted)
   {
 
@@ -188,14 +189,14 @@ void Renderer::DrawMesh(Mesh mesh, vec3d angel, const Camera &camera, vec3d objP
     vertex[2].color = triProjected.p->color;
 
     // Drawing
-    // SDL_RenderGeometry(sdlrenderer, NULL, vertex, 3, NULL, 0); // this has problems with view matrix or something. use DrawTriangle() for now //TODO: find or make an alternative
+    SDL_RenderGeometry(sdlrenderer, NULL, vertex, 3, NULL, 0); // now it's working
 
-    DrawTriangle(sdlrenderer,
-                 triProjected.p[0].x,
-                 h - triProjected.p[0].y,
-                 triProjected.p[1].x,
-                 h - triProjected.p[1].y,
-                 triProjected.p[2].x,
-                 h - triProjected.p[2].y);
+    // DrawTriangle(sdlrenderer,
+    //              triProjected.p[0].x,
+    //              h - triProjected.p[0].y,
+    //              triProjected.p[1].x,
+    //              h - triProjected.p[1].y,
+    //              triProjected.p[2].x,
+    //              h - triProjected.p[2].y);
   }
 }
