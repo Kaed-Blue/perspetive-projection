@@ -30,4 +30,6 @@ public:
   static void RotationX(mat4x4 &mat, const float theta);
   static void RotationY(mat4x4 &mat, const float theta);
   static void RotationZ(mat4x4 &mat, const float theta);
+
+  static vec3d PlainIntersect(const vec3d &pointOnPlain, const vec3d &normal, const vec3d &lineStart, const vec3d &lineEnd);
 };

@@ -59,7 +59,7 @@ VecMath::MakeIdentity()
   return mat;
 }
 
-vec3d VecMath::CrossProduct(const vec3d &vec1, const vec3d &vec2) // gives normalized cross product
+vec3d VecMath::CrossProduct(const vec3d &vec1, const vec3d &vec2)
 {
   vec3d normal;
 
@@ -155,4 +155,21 @@ void VecMath::RotationZ(mat4x4 &mat, const float angel)
   mat.m[1][1] = cosf(angel);
   mat.m[2][2] = 1;
   mat.m[3][3] = 1;
+}
+
+vec3d VecMath::PlainIntersect(const vec3d &pointOnPlain, const vec3d &normal,
+                              const vec3d &lineStart, const vec3d &lineEnd)
+{
+  // definition of a plain -> n.p + d = 0 // "." stands for dotproduct
+  float distanceToPlain = -VecMath::DotProduct(normal, pointOnPlain); // d*n = p's transformation to n (it's shadow)
+  float ad = VecMath::DotProduct(lineStart, normal);
+  float bd = VecMath::DotProduct(lineEnd, normal);
+
+  // p(t) = lineStart + t(lineEnd - lineStart)  0 < t < 1 --> parametrizes the line
+  // n.(lineStart + t(lineEnd - lineStart)) + d = 0 // which point of the line is on the plain
+  float t = (-distanceToPlain - ad) / (bd - ad); // solve above line for t
+
+  vec3d line = lineEnd - lineStart;
+  vec3d lineToIntersect = VecMath::ScaleVector(line, t);
+  return lineStart + lineToIntersect;
 }
