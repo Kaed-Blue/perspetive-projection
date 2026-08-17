@@ -28,6 +28,7 @@ public:
   void DrawGrid3D(const Camera &Camera);
 
   void NdcToPixels(vec3d &v);
+  int ClipAgainstPlain(const vec3d &pointOnPlain, const vec3d &normal, const triangle &tri, triangle &outTri1, triangle &outTri2);
 
   void DrawTriangle(SDL_Renderer* sdlrenderer,
                     int a_x,

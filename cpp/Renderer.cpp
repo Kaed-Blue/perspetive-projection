@@ -99,7 +99,64 @@ void Renderer::NdcToPixels(vec3d &v)
   v.y *= 0.5f * h;
 }
 
-// void Renderer::ApplyRotaion(const mat4x4 &mat, const vec3d &angels) {}
+mat4x4 Renderer::GetRotaionMatrix(const vec3d &angels)
+{
+  mat4x4 rotX, rotY, rotZ;
+  VecMath::RotationX(rotX, angels.x);
+  VecMath::RotationY(rotY, angels.y);
+  VecMath::RotationZ(rotZ, angels.z);
+  return rotX * rotY * rotZ;
+}
+
+int Renderer::ClipAgainstPlain(const vec3d &pointOnPlain, const vec3d &normal, const triangle &inTri, triangle &outTri1, triangle &outTri2)
+{
+  vec3d inside[3];
+  int insideCount = 0;
+  vec3d outside[3];
+  int outsideCount = 0;
+  float distanceToPlain = VecMath::DotProduct(normal, pointOnPlain); // didn't multi it by -1 to make it dist
+
+  for (int i = 0; i < 3; i++)
+  {
+    float pdistance = VecMath::DotProduct(normal, inTri.p[i]);
+    if (distanceToPlain <= pdistance)
+    {
+      inside[insideCount++] = inTri.p[i];
+    }
+    else
+    {
+      outside[outsideCount++] = inTri.p[i];
+    }
+  }
+
+  vec3d intersection[3];
+  switch (insideCount)
+  {
+  case 0:
+    return 0;
+
+  case 1:
+    VecMath::PlainIntersect(pointOnPlain, normal, inside[0], outside[0], intersection[0]);
+    VecMath::PlainIntersect(pointOnPlain, normal, inside[0], outside[1], intersection[1]);
+    outTri1 = {inside[0], intersection[0], intersection[1]};
+    return 1;
+
+  case 2:
+    VecMath::PlainIntersect(pointOnPlain, normal, inside[0], outside[0], intersection[0]);
+    VecMath::PlainIntersect(pointOnPlain, normal, inside[1], outside[0], intersection[1]);
+
+    outTri1 = {inside[0], inside[1], intersection[0]};
+    outTri2 = {inside[1], intersection[0], intersection[1]};
+    return 2;
+
+  case 3:
+    outTri1 = inTri;
+    return 1;
+
+  default:
+    return -1;
+  }
+}
 
 void Renderer::DrawMesh(Mesh mesh, vec3d angel, const Camera &camera, vec3d objPos) // FIXME: Some partitioning maybe
 {
@@ -135,8 +192,7 @@ void Renderer::DrawMesh(Mesh mesh, vec3d angel, const Camera &camera, vec3d objP
     line1 = triTransformed.p[1] - triTransformed.p[0];
     line2 = triTransformed.p[2] - triTransformed.p[0];
 
-    vec3d normal = VecMath::CrossProduct(line1, line2);
-    VecMath::Normalize(normal);
+    vec3d normal = VecMath::GetNormalized(VecMath::CrossProduct(line1, line2));
     vec3d cameraRay = triTransformed.p[0] - camera.GetCameraPos();
     float alignValue = VecMath::DotProduct(normal, cameraRay);
 
@@ -146,15 +202,25 @@ void Renderer::DrawMesh(Mesh mesh, vec3d angel, const Camera &camera, vec3d objP
       triViewed.p[i] = VecMath::MultiplyMatrixVector(triTransformed.p[i], viewMatrix);
     }
 
+    // clip into camera view
+    triangle clipped[2];
+    int numClipped = 0;
+    // near plain clipping
+    numClipped = ClipAgainstPlain({0.0f, 0.0f, this->Near}, {0.0f, 0.0f, 1.0f}, triViewed, clipped[0], clipped[1]);
+
     // Project into screen space (3D -> 2D)
+    for (int n = 0; n < numClipped; n++)
+    {
     if (alignValue < 0)
     {
-      for (int i = 0; i < 3; i++) {
-        triProjected.p[i] = VecMath::MultiplyMatrixVector(triViewed.p[i], matProj);
+        for (int i = 0; i < 3; i++)
+        {
+          triProjected.p[i] = VecMath::MultiplyMatrixVector(clipped[n].p[i], matProj);
       }
 
       // NDC to pixels
-      for (int i = 0; i < 3; i++) {
+        for (int i = 0; i < 3; i++)
+        {
         NdcToPixels(triProjected.p[i]);
       }
 
@@ -166,6 +232,7 @@ void Renderer::DrawMesh(Mesh mesh, vec3d angel, const Camera &camera, vec3d objP
 
       // Store projected tris
       vectriprojeted.push_back(triProjected);
+      }
     }
   }
 

@@ -157,19 +157,29 @@ void VecMath::RotationZ(mat4x4 &mat, const float angel)
   mat.m[3][3] = 1;
 }
 
-vec3d VecMath::PlainIntersect(const vec3d &pointOnPlain, const vec3d &normal,
-                              const vec3d &lineStart, const vec3d &lineEnd)
+bool VecMath::PlainIntersect(const vec3d &pointOnPlain, const vec3d &normal,
+                             const vec3d &lineStart, const vec3d &lineEnd, vec3d &output)
 {
   // definition of a plain -> n.p + d = 0 // "." stands for dotproduct
-  float distanceToPlain = -VecMath::DotProduct(normal, pointOnPlain); // d*n = p's transformation to n (it's shadow)
+  float plainOffset = -VecMath::DotProduct(normal, pointOnPlain); // d*n = p's transformation to n (it's shadow)
   float ad = VecMath::DotProduct(lineStart, normal);
   float bd = VecMath::DotProduct(lineEnd, normal);
 
   // p(t) = lineStart + t(lineEnd - lineStart)  0 < t < 1 --> parametrizes the line
   // n.(lineStart + t(lineEnd - lineStart)) + d = 0 // which point of the line is on the plain
-  float t = (-distanceToPlain - ad) / (bd - ad); // solve above line for t
+  // solve above line for t
+  float t = (-plainOffset - ad) / (bd - ad);
 
-  vec3d line = lineEnd - lineStart;
-  vec3d lineToIntersect = VecMath::ScaleVector(line, t);
-  return lineStart + lineToIntersect;
+  // if the intersection happens on the line segment and not the infinite line
+  if (0 < t && t < 1)
+  {
+    vec3d line = lineEnd - lineStart;
+    vec3d lineToIntersect = VecMath::ScaleVector(line, t);
+    output = lineStart + lineToIntersect;
+    return true;
+  }
+  else {return false;}
+    
+  // BUG: no checks for parallel
 }
+
