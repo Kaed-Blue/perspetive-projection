@@ -10,11 +10,13 @@ private:
   float yaw = 0;
   float pitch = 0;
   float roll = 0;
+  mat4x4 viewMatrix;
 
 public:
   vec3d GetCameraPos() const;
   vec3d GetForward() const;
   float GetYaw() const;
+  mat4x4 GetViewMatrix() const;
 
   vec3d GetRight() const;
   vec3d GetUp() const;
@@ -26,5 +28,5 @@ public:
 
   void ChangeDiraction(const vec3d &theta);
 
-  mat4x4 MakeViewMatrix() const;
+  void UpdateViewMatrix();
 };

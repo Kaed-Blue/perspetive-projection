@@ -17,6 +17,11 @@ float Camera::GetYaw() const
   return this->yaw;
 }
 
+mat4x4 Camera::GetViewMatrix() const
+{
+  return this->viewMatrix;
+}
+
 void Camera::MoveCameraWorld(const vec3d &move) // not so sure about this
 {
   this->position += move;
@@ -74,8 +79,7 @@ vec3d Camera::GetUp() const
   return VecMath::GetNormalized(VecMath::CrossProduct(this->forward, right)); // do you even need to normalize?
 }
 
-mat4x4
-Camera::MakeViewMatrix() const
+void Camera::UpdateViewMatrix()
 {
   vec3d right = this->GetRight();
   vec3d newUp = this->GetUp();
@@ -97,5 +101,5 @@ Camera::MakeViewMatrix() const
   viewMatrix.m[3][2] = -VecMath::DotProduct(this->forward, this->position);
   viewMatrix.m[3][3] = 1;
 
-  return viewMatrix;
+  this->viewMatrix = viewMatrix;
 }

@@ -21,7 +21,7 @@ Renderer::Renderer(SDL_Renderer* sdlrenderer)
 
 void Renderer::DrawLine3D(const vec3d &p1, const vec3d &p2, const Camera &camera) // not sure about refrencing the camera
 {
-  mat4x4 viewmatrix = camera.MakeViewMatrix();
+  mat4x4 viewmatrix = camera.GetViewMatrix();
   vec3d p1viewed = VecMath::MultiplyMatrixVector(p1, viewmatrix);
   vec3d p2viewed = VecMath::MultiplyMatrixVector(p2, viewmatrix);
 
@@ -158,27 +158,26 @@ int Renderer::ClipAgainstPlain(const vec3d &pointOnPlain, const vec3d &normal, c
   }
 }
 
-void Renderer::DrawMesh(Mesh mesh, vec3d angel, const Camera &camera, vec3d objPos) // FIXME: Some partitioning maybe
+void Renderer::DrawMesh(std::vector<triangle> mesh, vec3d angels, const Camera &camera, vec3d objPos) // FIXME: this function is doing too much
 {
   std::vector<triangle> vectriprojeted;
-  mat4x4 worldMat = VecMath::MakeIdentity();
+  Ilumination ilumination;
+  ilumination.SetLightDir({0, 0, 1});
 
   // Translation of the object matrix
   mat4x4 Translation = VecMath::TranslateMatrix(objPos.x, objPos.y, objPos.z);
 
-  // Rotation matrix
-  mat4x4 RotX, RotY, RotZ;
-  VecMath::RotationX(RotX, angel.x);
-  VecMath::RotationY(RotY, angel.y);
-  VecMath::RotationZ(RotZ, angel.z);
+  // Rotation of the object matrix
+  mat4x4 rots = this->GetRotaionMatrix(angels);
 
   // Camera view matrix
-  mat4x4 viewMatrix = camera.MakeViewMatrix();
+  mat4x4 viewMatrix = camera.GetViewMatrix(); // TODO: make viewMatrix a member of camera
 
   // Combine every transformation in the same matrix
-  worldMat = Translation * RotX * RotY * RotZ; // using "*" as MultiplyMatrices
+  mat4x4 worldMat = VecMath::MakeIdentity();
+  worldMat = rots * Translation;
 
-  for (triangle tri : mesh.tris)
+  for (triangle tri : mesh)
   {
     triangle triProjected, triTransformed, triViewed;
 
@@ -211,27 +210,25 @@ void Renderer::DrawMesh(Mesh mesh, vec3d angel, const Camera &camera, vec3d objP
     // Project into screen space (3D -> 2D)
     for (int n = 0; n < numClipped; n++)
     {
-    if (alignValue < 0)
-    {
+      if (alignValue < 0)
+      {
         for (int i = 0; i < 3; i++)
         {
           triProjected.p[i] = VecMath::MultiplyMatrixVector(clipped[n].p[i], matProj);
-      }
+        }
 
-      // NDC to pixels
+        // NDC to pixels
         for (int i = 0; i < 3; i++)
         {
-        NdcToPixels(triProjected.p[i]);
-      }
+          NdcToPixels(triProjected.p[i]);
+        }
 
-      // Lighting
-      Ilumination ilumination;
-      ilumination.SetLightDir({0, 0, 1});
-      SDL_FColor Lum = ilumination.ShadowValue(normal);
-      triProjected.p->color = Lum;
+        // Lighting
+        SDL_FColor Lum = ilumination.ShadowValue(normal);
+        triProjected.p->color = Lum;
 
-      // Store projected tris
-      vectriprojeted.push_back(triProjected);
+        // Store projected tris
+        vectriprojeted.push_back(triProjected);
       }
     }
   }

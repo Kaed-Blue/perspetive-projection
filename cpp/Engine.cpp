@@ -96,44 +96,33 @@ Engine::run()
     // Camera diraction
     if (keyStates[SDL_SCANCODE_J])
     {
-      Ecamera->ChangeDiraction({0, dm * 3, 0});
+      Ecamera->ChangeDiraction({0, dm * 4, 0});
     }
 
     if (keyStates[SDL_SCANCODE_L])
     {
-      Ecamera->ChangeDiraction({0, -dm * 3, 0});
+      Ecamera->ChangeDiraction({0, -dm * 4, 0});
     }
 
     if (keyStates[SDL_SCANCODE_K])
     {
-      Ecamera->ChangeDiraction({dm * 3, 0, 0});
+      Ecamera->ChangeDiraction({dm * 4, 0, 0});
     }
 
     if (keyStates[SDL_SCANCODE_I])
     {
-      Ecamera->ChangeDiraction({-dm * 3, 0, 0});
+      Ecamera->ChangeDiraction({-dm * 4, 0, 0});
     }
 
-    if (keyStates[SDL_SCANCODE_U])
-    {
-      Ecamera->ChangeDiraction({0, 0, -dm});
-    }
+    Ecamera->UpdateViewMatrix();
 
-    if (keyStates[SDL_SCANCODE_O])
-    {
-      Ecamera->ChangeDiraction({0, 0, dm});
-    }
+    static vec3d angels;
+    angels.x += 40 * elapsedTime * DEG2RAD;
+    angels.y += 20 * elapsedTime * DEG2RAD;
+    angels.z += 10 * elapsedTime * DEG2RAD;
 
-    static vec3d angel;
-    angel.x += 40 * elapsedTime * DEG2RAD;
-    angel.y += 20 * elapsedTime * DEG2RAD;
-    angel.z += 10 * elapsedTime * DEG2RAD;
-
-    // Ecamera->TeleportCameraWorld({0, 0, 0});
-    Erenderer->DrawMesh(cube, {0, 0, 0}, *Ecamera, {0, 0, 20});
-    // Ecamera->TeleportCameraWorld({10, 0, 0});
-    // Erenderer->DrawLine3D({10, 10, 50}, {0, 0, 50}, *Ecamera);
-    // Erenderer->Draw3DGrid(*Ecamera);
+    Erenderer->DrawMesh(cube.tris, {0, 0, 0}, *Ecamera, {0, 0, 20});
+    // Erenderer->DrawGrid3D(*Ecamera);
 
     SDL_RenderPresent(sdlRenderer);
   }

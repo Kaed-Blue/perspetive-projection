@@ -27,6 +27,9 @@ public:
 
   void DrawGrid3D(const Camera &Camera);
 
+  
+  mat4x4 GetRotaionMatrix(const vec3d &angels);
+  
   void NdcToPixels(vec3d &v);
   int ClipAgainstPlain(const vec3d &pointOnPlain, const vec3d &normal, const triangle &tri, triangle &outTri1, triangle &outTri2);
 
@@ -38,5 +41,5 @@ public:
                     int c_x,
                     int c_y);
 
-  void DrawMesh(Mesh mesh, vec3d angel, const Camera &camera, vec3d objPos);
+  void DrawMesh(std::vector<triangle> mesh, vec3d angels, const Camera &camera, vec3d objPos);
 };
