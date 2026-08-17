@@ -25,8 +25,41 @@ void Renderer::DrawLine3D(const vec3d &p1, const vec3d &p2, const Camera &camera
   vec3d p1viewed = VecMath::MultiplyMatrixVector(p1, viewmatrix);
   vec3d p2viewed = VecMath::MultiplyMatrixVector(p2, viewmatrix);
 
-  vec3d p1Projected = VecMath::MultiplyMatrixVector(p1viewed, matProj);
-  vec3d p2Projected = VecMath::MultiplyMatrixVector(p2viewed, matProj);
+  vec3d interPoint, p1Clipped, p2Clipped;
+  float distanceToPlain = VecMath::DotProduct({0.0f, 0.0f, 1.0f}, {0.0f, 0.0f, this->Near});
+  float p1distance = VecMath::DotProduct({0.0f, 0.0f, 1.0f}, p1viewed);
+  float p2distance = VecMath::DotProduct({0.0f, 0.0f, 1.0f}, p2viewed);
+
+  bool p1Inside = distanceToPlain <= p1distance;
+  bool p2Inside = distanceToPlain <= p2distance;
+
+  if (p1Inside && p2Inside)
+  {
+    p1Clipped = p1viewed;
+    p2Clipped = p2viewed;
+  }
+  else if (!p1Inside && !p2Inside)
+  {
+    return;
+  }
+  else
+  {
+    VecMath::PlainIntersect({0.0f, 0.0f, this->Near}, {0.0f, 0.0f, 1.0f}, p1viewed, p2viewed, interPoint);
+
+    if (p1Inside)
+    {
+      p1Clipped = p1viewed;
+      p2Clipped = interPoint;
+    }
+    else
+    {
+      p1Clipped = interPoint;
+      p2Clipped = p2viewed;
+    }
+  }
+
+  vec3d p1Projected = VecMath::MultiplyMatrixVector(p1Clipped, matProj);
+  vec3d p2Projected = VecMath::MultiplyMatrixVector(p2Clipped, matProj);
 
   NdcToPixels(p1Projected);
   NdcToPixels(p2Projected);
@@ -44,7 +77,7 @@ void Renderer::DrawGrid3D(const Camera &Camera)
   {
     for (int z = -size; z <= size; z++)
     {
-      DrawLine3D(
+      this->DrawLine3D(
           {-size * spacing, y * spacing, z * spacing},
           {size * spacing, y * spacing, z * spacing},
           Camera);
@@ -56,7 +89,7 @@ void Renderer::DrawGrid3D(const Camera &Camera)
   {
     for (int z = -size; z <= size; z++)
     {
-      DrawLine3D(
+      this->DrawLine3D(
           {x * spacing, -size * spacing, z * spacing},
           {x * spacing, size * spacing, z * spacing},
           Camera);
@@ -68,7 +101,7 @@ void Renderer::DrawGrid3D(const Camera &Camera)
   {
     for (int y = -size; y <= size; y++)
     {
-      DrawLine3D(
+      this->DrawLine3D(
           {x * spacing, y * spacing, -size * spacing},
           {x * spacing, y * spacing, size * spacing},
           Camera);
@@ -158,7 +191,7 @@ int Renderer::ClipAgainstPlain(const vec3d &pointOnPlain, const vec3d &normal, c
   }
 }
 
-void Renderer::DrawMesh(std::vector<triangle> mesh, vec3d angels, const Camera &camera, vec3d objPos) // FIXME: this function is doing too much
+void Renderer::DrawMesh(Mesh mesh, vec3d angels, const Camera &camera, vec3d objPos) // FIXME: this function is doing too much
 {
   std::vector<triangle> vectriprojeted;
   Ilumination ilumination;
@@ -177,7 +210,7 @@ void Renderer::DrawMesh(std::vector<triangle> mesh, vec3d angels, const Camera &
   mat4x4 worldMat = VecMath::MakeIdentity();
   worldMat = rots * Translation;
 
-  for (triangle tri : mesh)
+  for (triangle tri : mesh.tris)
   {
     triangle triProjected, triTransformed, triViewed;
 
@@ -201,10 +234,9 @@ void Renderer::DrawMesh(std::vector<triangle> mesh, vec3d angels, const Camera &
       triViewed.p[i] = VecMath::MultiplyMatrixVector(triTransformed.p[i], viewMatrix);
     }
 
-    // clip into camera view
+    // Near plain clipping
     triangle clipped[2];
     int numClipped = 0;
-    // near plain clipping
     numClipped = ClipAgainstPlain({0.0f, 0.0f, this->Near}, {0.0f, 0.0f, 1.0f}, triViewed, clipped[0], clipped[1]);
 
     // Project into screen space (3D -> 2D)
@@ -238,7 +270,7 @@ void Renderer::DrawMesh(std::vector<triangle> mesh, vec3d angels, const Camera &
        [](const triangle &tri1, const triangle &tri2) // lambda
        {float z1Avg = tri1.p[0].z + tri1.p[1].z + tri1.p[2].z;
         float z2Avg = tri2.p[0].z + tri2.p[1].z + tri2.p[2].z;
-        return z1Avg > z2Avg; });                                          // this was the problem
+        return z1Avg > z2Avg; });
 
   // Assining to SDL_Vertex so it can be drawn by RenderGeometry (not anymore)
   for (triangle triProjected : vectriprojeted)
@@ -253,14 +285,14 @@ void Renderer::DrawMesh(std::vector<triangle> mesh, vec3d angels, const Camera &
     vertex[2].color = triProjected.p->color;
 
     // Drawing
-    SDL_RenderGeometry(sdlrenderer, NULL, vertex, 3, NULL, 0); // now it's working
+    // SDL_RenderGeometry(sdlrenderer, NULL, vertex, 3, NULL, 0); // now it's working
 
-    // DrawTriangle(sdlrenderer,
-    //              triProjected.p[0].x,
-    //              h - triProjected.p[0].y,
-    //              triProjected.p[1].x,
-    //              h - triProjected.p[1].y,
-    //              triProjected.p[2].x,
-    //              h - triProjected.p[2].y);
+    DrawTriangle(sdlrenderer,
+                 triProjected.p[0].x,
+                 h - triProjected.p[0].y,
+                 triProjected.p[1].x,
+                 h - triProjected.p[1].y,
+                 triProjected.p[2].x,
+                 h - triProjected.p[2].y);
   }
 }

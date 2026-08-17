@@ -121,7 +121,7 @@ Engine::run()
     angels.y += 20 * elapsedTime * DEG2RAD;
     angels.z += 10 * elapsedTime * DEG2RAD;
 
-    Erenderer->DrawMesh(cube.tris, {0, 0, 0}, *Ecamera, {0, 0, 20});
+    Erenderer->DrawMesh(cube, {0, 0, 0}, *Ecamera, {0, 0, 20});
     // Erenderer->DrawGrid3D(*Ecamera);
 
     SDL_RenderPresent(sdlRenderer);

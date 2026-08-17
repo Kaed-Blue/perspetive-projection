@@ -41,5 +41,5 @@ public:
                     int c_x,
                     int c_y);
 
-  void DrawMesh(std::vector<triangle> mesh, vec3d angels, const Camera &camera, vec3d objPos);
+  void DrawMesh(Mesh mesh, vec3d angels, const Camera &camera, vec3d objPos);
 };
