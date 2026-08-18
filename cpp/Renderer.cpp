@@ -4,6 +4,7 @@
 #include "Mesh.h"
 #include "Camera.h"
 #include "Ilumination.h"
+#include "Clipper.h"
 
 Renderer::Renderer(SDL_Renderer* sdlrenderer)
   : sdlrenderer(sdlrenderer)
@@ -25,37 +26,11 @@ void Renderer::DrawLine3D(const vec3d &p1, const vec3d &p2, const Camera &camera
   vec3d p1viewed = VecMath::MultiplyMatrixVector(p1, viewmatrix);
   vec3d p2viewed = VecMath::MultiplyMatrixVector(p2, viewmatrix);
 
-  vec3d interPoint, p1Clipped, p2Clipped;
-  float distanceToPlain = VecMath::DotProduct({0.0f, 0.0f, 1.0f}, {0.0f, 0.0f, this->Near});
-  float p1distance = VecMath::DotProduct({0.0f, 0.0f, 1.0f}, p1viewed);
-  float p2distance = VecMath::DotProduct({0.0f, 0.0f, 1.0f}, p2viewed);
+  vec3d p1Clipped, p2Clipped;
 
-  bool p1Inside = distanceToPlain <= p1distance;
-  bool p2Inside = distanceToPlain <= p2distance;
-
-  if (p1Inside && p2Inside)
-  {
-    p1Clipped = p1viewed;
-    p2Clipped = p2viewed;
-  }
-  else if (!p1Inside && !p2Inside)
+  if (!Clipper::ClipAgainstPlain({0.0f, 0.0f, this->Near}, {0.0f, 0.0f, 1.0f}, p1viewed, p2viewed, p1Clipped, p2Clipped))
   {
     return;
-  }
-  else
-  {
-    VecMath::PlainIntersect({0.0f, 0.0f, this->Near}, {0.0f, 0.0f, 1.0f}, p1viewed, p2viewed, interPoint);
-
-    if (p1Inside)
-    {
-      p1Clipped = p1viewed;
-      p2Clipped = interPoint;
-    }
-    else
-    {
-      p1Clipped = interPoint;
-      p2Clipped = p2viewed;
-    }
   }
 
   vec3d p1Projected = VecMath::MultiplyMatrixVector(p1Clipped, matProj);
@@ -141,56 +116,6 @@ mat4x4 Renderer::GetRotaionMatrix(const vec3d &angels)
   return rotX * rotY * rotZ;
 }
 
-int Renderer::ClipAgainstPlain(const vec3d &pointOnPlain, const vec3d &normal, const triangle &inTri, triangle &outTri1, triangle &outTri2)
-{
-  vec3d inside[3];
-  int insideCount = 0;
-  vec3d outside[3];
-  int outsideCount = 0;
-  float distanceToPlain = VecMath::DotProduct(normal, pointOnPlain); // didn't multi it by -1 to make it dist
-
-  for (int i = 0; i < 3; i++)
-  {
-    float pdistance = VecMath::DotProduct(normal, inTri.p[i]);
-    if (distanceToPlain <= pdistance)
-    {
-      inside[insideCount++] = inTri.p[i];
-    }
-    else
-    {
-      outside[outsideCount++] = inTri.p[i];
-    }
-  }
-
-  vec3d intersection[3];
-  switch (insideCount)
-  {
-  case 0:
-    return 0;
-
-  case 1:
-    VecMath::PlainIntersect(pointOnPlain, normal, inside[0], outside[0], intersection[0]);
-    VecMath::PlainIntersect(pointOnPlain, normal, inside[0], outside[1], intersection[1]);
-    outTri1 = {inside[0], intersection[0], intersection[1]};
-    return 1;
-
-  case 2:
-    VecMath::PlainIntersect(pointOnPlain, normal, inside[0], outside[0], intersection[0]);
-    VecMath::PlainIntersect(pointOnPlain, normal, inside[1], outside[0], intersection[1]);
-
-    outTri1 = {inside[0], inside[1], intersection[0]};
-    outTri2 = {inside[1], intersection[0], intersection[1]};
-    return 2;
-
-  case 3:
-    outTri1 = inTri;
-    return 1;
-
-  default:
-    return -1;
-  }
-}
-
 void Renderer::DrawMesh(Mesh mesh, vec3d angels, const Camera &camera, vec3d objPos) // FIXME: this function is doing too much
 {
   std::vector<triangle> vectriprojeted;
@@ -237,7 +162,7 @@ void Renderer::DrawMesh(Mesh mesh, vec3d angels, const Camera &camera, vec3d obj
     // Near plain clipping
     triangle clipped[2];
     int numClipped = 0;
-    numClipped = ClipAgainstPlain({0.0f, 0.0f, this->Near}, {0.0f, 0.0f, 1.0f}, triViewed, clipped[0], clipped[1]);
+    numClipped = Clipper::ClipAgainstPlain({0.0f, 0.0f, this->Near}, {0.0f, 0.0f, 1.0f}, triViewed, clipped[0], clipped[1]);
 
     // Project into screen space (3D -> 2D)
     for (int n = 0; n < numClipped; n++)
