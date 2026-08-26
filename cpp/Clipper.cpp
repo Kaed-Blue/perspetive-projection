@@ -1,5 +1,6 @@
 #include "Clipper.h"
 #include "VecMath.h"
+#include <math.h>
 
 int Clipper::ClipAgainstPlain(const vec3d &pointOnPlain, const vec3d &normal, const triangle &inTri, triangle &outTri1, triangle &outTri2) // For a triangle
 {
@@ -12,7 +13,7 @@ int Clipper::ClipAgainstPlain(const vec3d &pointOnPlain, const vec3d &normal, co
   for (int i = 0; i < 3; i++)
   {
     float pdistance = VecMath::DotProduct(normal, inTri.p[i]);
-    if (distanceToPlain <= pdistance)
+    if (distanceToPlain <= pdistance) // plain normal is pointing inside
     {
       inside[insideCount++] = inTri.p[i];
     }
@@ -87,5 +88,30 @@ bool Clipper::ClipAgainstPlain(const vec3d &pointOnPlain, const vec3d &normal, c
       p2Clipped = lineEnd;
       return true;
     }
+  }
+}
+
+vec3d Clipper::SidePlainNormal(const float vFOV, const float AspectRatio, const int side)
+{
+  float HalfvFov = (vFOV * 0.5f) * M_PI / 180.0f;
+  float hFOV = 2 * atanf(tanf(vFOV * M_PI / 360.0f) * AspectRatio);
+  float HalfhFov = (hFOV * 0.5f) * M_PI / 180.0f;
+
+  switch (side)
+  {
+  case 1: // Top plain normal
+    return {0, sinf(HalfvFov), cosf(HalfvFov)};
+
+  case 2: // Right plain normal
+    return {cosf(HalfhFov), 0, sinf(HalfhFov)};
+
+  case 3: // Bottom plain normal
+    return {0, -sinf(HalfvFov), cosf(HalfvFov)};
+
+  case 4: // Left plain normal
+    return {-cosf(HalfhFov), 0, sinf(HalfhFov)};
+
+  default:
+    throw;
   }
 }
