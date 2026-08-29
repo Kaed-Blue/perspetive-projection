@@ -8,9 +8,9 @@ private:
   vec3d lightDir = { 0, 0, -1 };
 
 public:
-  vec3d GetLightRay();
+  vec3d GetLightRay() const;
 
-  void SetLightDir(vec3d lightDir);
+  void SetLightDir(const vec3d &lightDir);
 
-  SDL_FColor ShadowValue(vec3d &normal);
+  SDL_FColor ShadowValue(const vec3d &normal) const;
 };

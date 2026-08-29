@@ -3,6 +3,7 @@
 #include "Camera.h"
 #include "Mesh.h"
 #include "VecMath.h"
+#include "Ilumination.h"
 #include <array>
 
 float
@@ -121,7 +122,12 @@ Engine::run()
     angels.y += 20 * elapsedTime * DEG2RAD;
     angels.z += 10 * elapsedTime * DEG2RAD;
 
-    Erenderer->DrawMesh(cube, {0, 0, 0}, *Ecamera, {0, 0, 20});
+    std::vector<Ilumination> iluminations;
+    Ilumination ilumination1;
+    ilumination1.SetLightDir({0, 0, 1});
+    iluminations.push_back(ilumination1);
+
+    Erenderer->DrawMesh(cube, {0, 0, 0}, *Ecamera, {0, 0, 20}, iluminations);
     // Erenderer->DrawGrid3D(*Ecamera);
 
     SDL_RenderPresent(sdlRenderer);

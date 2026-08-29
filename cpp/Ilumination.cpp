@@ -1,20 +1,20 @@
 #include "Ilumination.h"
 #include "VecMath.h"
 
-vec3d Ilumination::GetLightRay()
+vec3d Ilumination::GetLightRay() const
 {
-  return lightDir;
+  return this->lightDir;
 }
 
-void Ilumination::SetLightDir(vec3d lightDir)
+void Ilumination::SetLightDir(const vec3d &lightDir)
 {
   this->lightDir = lightDir;
 }
 
 SDL_FColor
-Ilumination::ShadowValue(vec3d &normal)
+Ilumination::ShadowValue(const vec3d &normal) const
 {
-  VecMath::Normalize(this->lightDir);
+  // beware! lightDir may not be normalized
   float LumDP = VecMath::DotProduct(normal, this->lightDir);
   int ilum = LumDP * -10;
   switch (ilum)
