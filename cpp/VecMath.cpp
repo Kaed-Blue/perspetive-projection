@@ -38,7 +38,7 @@ VecMath::MultiplyMatrices(const mat4x4& m1, const mat4x4& m2)
 }
 
 mat4x4
-VecMath::TranslateMatrix(const float &x, const float &y, const float &z)
+VecMath::TranslateMatrix(const float x, const float y, const float z)
 {
   mat4x4 mat = MakeIdentity();
   mat.m[3][0] = x;
@@ -74,7 +74,7 @@ vec3d &
 VecMath::Normalize(vec3d &vec)
 {
   float Length = sqrtf(vec.x * vec.x + vec.y * vec.y + vec.z * vec.z);
-  if (Length > 0)
+  if (Length > 0.0f)
   {
     vec.x /= Length;
     vec.y /= Length;
@@ -129,22 +129,22 @@ void VecMath::CoutVec(const vec3d &v) // this is temporary
 
 void VecMath::RotationX(mat4x4 &mat, const float angel)
 {
-  mat.m[0][0] = 1;
+  mat.m[0][0] = 1.0f;
   mat.m[1][1] = cosf(angel);
   mat.m[1][2] = sinf(angel);
   mat.m[2][1] = -sinf(angel);
   mat.m[2][2] = cosf(angel);
-  mat.m[3][3] = 1;
+  mat.m[3][3] = 1.0f;
 }
 
 void VecMath::RotationY(mat4x4 &mat, const float angel)
 {
   mat.m[0][0] = cosf(angel);
   mat.m[0][2] = sinf(angel);
-  mat.m[1][1] = 1;
+  mat.m[1][1] = 1.0f;
   mat.m[2][0] = -sinf(angel);
   mat.m[2][2] = cosf(angel);
-  mat.m[3][3] = 1;
+  mat.m[3][3] = 1.0f;
 }
 
 void VecMath::RotationZ(mat4x4 &mat, const float angel)
@@ -153,8 +153,8 @@ void VecMath::RotationZ(mat4x4 &mat, const float angel)
   mat.m[0][1] = sinf(angel);
   mat.m[1][0] = -sinf(angel);
   mat.m[1][1] = cosf(angel);
-  mat.m[2][2] = 1;
-  mat.m[3][3] = 1;
+  mat.m[2][2] = 1.0f;
+  mat.m[3][3] = 1.0f;
 }
 
 bool VecMath::PlainIntersect(const vec3d &pointOnPlain, const vec3d &normal,
@@ -171,7 +171,7 @@ bool VecMath::PlainIntersect(const vec3d &pointOnPlain, const vec3d &normal,
   float t = (-plainOffset - ad) / (bd - ad);
 
   // if the intersection happens on the line segment and not the infinite line
-  if (0 < t && t < 1)
+  if (0.0f <= t && t <= 1.0f)
   {
     vec3d line = lineEnd - lineStart;
     vec3d lineToIntersect = VecMath::ScaleVector(line, t);
