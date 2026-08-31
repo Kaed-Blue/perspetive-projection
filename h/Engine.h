@@ -25,5 +25,9 @@ public:
 
   void run();
 
+  void MoveCamera(const bool keyStetes[], const float speed);
+
+  void DirectCamera(const bool keyStates[], const float speed);
+
   void clean();
 };
