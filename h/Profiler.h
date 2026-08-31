@@ -1,25 +1,25 @@
 #pragma once
-#include <chrono>
+#include <sdl3/sdl.h> // maybe using sdl would be better?
 #include <iostream>
 
 class ScopeTimer
 {
 private:
-  std::chrono::high_resolution_clock::time_point start;
+  Uint64 start;
   const char *name;
 
 public:
   ScopeTimer(const char *name) : name(name)
   {
-    this->start = std::chrono::high_resolution_clock::now();
+    this->start = SDL_GetPerformanceCounter();
   }
 
   ~ScopeTimer()
   {
-    auto end = std::chrono::high_resolution_clock::now();
+    auto end = SDL_GetPerformanceCounter();
 
-    auto duration = std::chrono::duration_cast<std::chrono::microseconds>(end - start);
+    auto duration = static_cast<double>(end - start) / SDL_GetPerformanceFrequency();
 
-    std::cout << this->name << ": " << duration.count() << " us\n";
+    std::cout << this->name << ": " << duration * 1000000 << " us\n";
   }
 };
