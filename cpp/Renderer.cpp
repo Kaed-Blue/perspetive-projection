@@ -4,6 +4,7 @@
 #include "Mesh.h"
 #include "Camera.h"
 #include "Ilumination.h"
+#include <array>
 
 struct triInfo
 {
@@ -191,12 +192,12 @@ void Renderer::DrawMesh(const Mesh &mesh, const vec3d &angels, const Camera &cam
     triViewed = this->TransformTriangle(triTransformed, camera.GetViewMatrix());
 
     // Cut to clip-space
-    std::vector<triangle> triClipped = clipper.ClipSpace(triViewed);
+    ClipResult triClipped = clipper.ClipSpace(triViewed);
 
     // Project into screen space (3D -> 2D)
-    for (triangle tri : triClipped)
+    for (int i = 0; i < triClipped.count; i++)
     {
-      triProjected = this->TransformTriangle(tri, this->matProj);
+      triProjected = this->TransformTriangle(triClipped.triangles[i], this->matProj);
       NdcToPixels(triProjected);
 
       // Lighting

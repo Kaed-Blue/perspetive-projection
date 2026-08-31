@@ -1,7 +1,7 @@
 #include "Clipper.h"
 #include "VecMath.h"
 #include <math.h>
-#include <vector>
+#include <array>
 
 Clipper::Clipper(float vFOV, float aspectRatio, float nearPlain, float farPlain)
 {
@@ -106,39 +106,45 @@ bool Clipper::ClipAgainstPlain(const vec3d &pointOnPlain, const vec3d &normal, c
   }
 }
 
-std::vector<triangle>
-Clipper::ClipSpace(const triangle &inTri)
+ClipResult
+Clipper::ClipSpace(const triangle &inTri) // FIXME: Huge performace issue
 {
-  std::vector<triangle> triangles, clipped;
-  triangles.reserve(16);
-  clipped.reserve(16);
-  triangles.push_back(inTri);
+  std::array<triangle, 8> triangles; // you should be able to only use one array
+  std::array<triangle, 8> clipped;
+
+  triangles[0] = inTri;
+  int triangleCount = 1;
 
   triangle temp1, temp2;
   for (int n = 0; n < 6; n++)
   {
-    for (const triangle &tri : triangles)
+    int clippedCount = 0;
+
+    for (int i = 0; i < triangleCount; i++)
     {
+      const triangle &tri = triangles[i];
+
       int triCount = this->ClipAgainstPlain(this->plainPoints[n], this->plainNormals[n], tri, temp1, temp2);
       if (triCount == 0)
         continue;
 
       if (triCount == 1)
-        clipped.push_back(temp1);
+        clipped[clippedCount++] = temp1;
 
       else if (triCount == 2)
       {
-        clipped.push_back(temp1);
-        clipped.push_back(temp2);
+        clipped[clippedCount++] = temp1;
+        clipped[clippedCount++] = temp2;
       }
     }
-    triangles = std::move(clipped);
+    std::swap(triangles, clipped);
+    triangleCount = clippedCount;
 
-    if (triangles.empty())
+    if (triangleCount == 0)
       break;
   }
 
-  return triangles;
+  return {triangles, triangleCount};
 }
 
 void Clipper::UpdatePlainNormals(const float vFOV, const float aspectRatio)
