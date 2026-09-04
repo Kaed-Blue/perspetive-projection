@@ -5,6 +5,7 @@
 #include "Camera.h"
 #include "Ilumination.h"
 #include <array>
+#include "Profiler.h"
 
 struct triInfo
 {
@@ -51,48 +52,6 @@ void Renderer::DrawLine3D(const vec3d &p1, const vec3d &p2, const Camera &camera
   NdcToPixels(p2Projected);
 
   SDL_RenderLine(this->sdlrenderer, p1Projected.x, h - p1Projected.y, p2Projected.x, h - p2Projected.y); // SDL is y down! beware!
-}
-
-void Renderer::DrawGrid3D(const Camera &Camera) // TODO: This shouldn't be here
-{
-  const int size = 1;
-  const float spacing = 10.0f;
-
-  // Lines parallel to X
-  for (int y = -size; y <= size; y++)
-  {
-    for (int z = -size; z <= size; z++)
-    {
-      this->DrawLine3D(
-          {-size * spacing, y * spacing, z * spacing},
-          {size * spacing, y * spacing, z * spacing},
-          Camera);
-    }
-  }
-
-  // Lines parallel to Y
-  for (int x = -size; x <= size; x++)
-  {
-    for (int z = -size; z <= size; z++)
-    {
-      this->DrawLine3D(
-          {x * spacing, -size * spacing, z * spacing},
-          {x * spacing, size * spacing, z * spacing},
-          Camera);
-    }
-  }
-
-  // Lines parallel to Z
-  for (int x = -size; x <= size; x++)
-  {
-    for (int y = -size; y <= size; y++)
-    {
-      this->DrawLine3D(
-          {x * spacing, y * spacing, -size * spacing},
-          {x * spacing, y * spacing, size * spacing},
-          Camera);
-    }
-  }
 }
 
 void Renderer::DrawTriangle(SDL_Renderer *sdlrenderer,
@@ -155,22 +114,22 @@ triangle Renderer::TransformTriangle(const triangle &tri, const mat4x4 &mat)
   return transformed;
 }
 
-triInfo Renderer::GetTriangleInfo(const triangle &tri, const Camera &camera)
+triInfo Renderer::GetTriangleInfo(const triangle &tri, const vec3d &cameraPos)
 {
-  vec3d line1, line2;
-  line1 = tri.p[1] - tri.p[0];
-  line2 = tri.p[2] - tri.p[0];
-
-  vec3d normal = VecMath::GetNormalized(VecMath::CrossProduct(line1, line2));
-  vec3d cameraRay = tri.p[0] - camera.GetCameraPos();
+  vec3d normal = VecMath::GetNormalized(VecMath::CrossProduct(tri.p[1] - tri.p[0], tri.p[2] - tri.p[0]));
+  vec3d cameraRay = tri.p[0] - cameraPos;
 
   return {normal, VecMath::DotProduct(normal, cameraRay) > 0};
 }
 
-void Renderer::DrawMesh(const Mesh &mesh, const vec3d &angels, const Camera &camera, const vec3d &objPos, const std::vector<Ilumination> &iluminations) // FIXME: this function is doing too much
+void Renderer::DrawMesh(const Mesh &mesh, const vec3d &angels, const Camera &camera, const vec3d &objPos, const std::vector<Ilumination> &iluminations)
 {
+  // ScopeTimer ti("DrawMesh");
   std::vector<triangle> vectriprojeted;
   vectriprojeted.reserve(mesh.tris.size());
+
+  mat4x4 viewMatrix = camera.GetViewMatrix();
+  vec3d cameraPos = camera.GetCameraPos();
 
   // Combine every transformation in the same matrix
   mat4x4 worldMat = this->MakeWorldMat(objPos, angels);
@@ -179,19 +138,19 @@ void Renderer::DrawMesh(const Mesh &mesh, const vec3d &angels, const Camera &cam
   {
     triangle triProjected, triTransformed, triViewed;
 
-    // Apply translation and roatation
+    // Apply translation and roatation // 8%
     triTransformed = this->TransformTriangle(tri, worldMat);
 
-    triInfo info = GetTriangleInfo(triTransformed, camera);
+    triInfo info = GetTriangleInfo(triTransformed, cameraPos); // 6%
 
     // Backface culling
     if (info.backface)
       continue;
 
-    // Bring into camera view
-    triViewed = this->TransformTriangle(triTransformed, camera.GetViewMatrix());
+    // Bring into camera view // 9%
+    triViewed = this->TransformTriangle(triTransformed, viewMatrix);
 
-    // Cut to clip-space
+    // Cut to clip-space // 39%
     ClipResult triClipped = clipper.ClipSpace(triViewed);
 
     // Project into screen space (3D -> 2D)
@@ -217,13 +176,14 @@ void Renderer::DrawMesh(const Mesh &mesh, const vec3d &angels, const Camera &cam
          return z1Avg > z2Avg;
        });
 
-  this->Rasterize(vectriprojeted);
+  this->Rasterize(vectriprojeted); // 3%
 }
 
 void Renderer::Rasterize(const std::vector<triangle> &triangles)
 {
+  // ScopeTimer ti("raster");
   // Assigning to SDL_Vertex so it can be drawn by RenderGeometry
-  for (triangle tri : triangles)
+  for (const triangle &tri : triangles)
   {
 
     SDL_Vertex vertex[3];
@@ -235,7 +195,7 @@ void Renderer::Rasterize(const std::vector<triangle> &triangles)
     vertex[2].color = tri.p->color;
 
     // Drawing
-    SDL_RenderGeometry(sdlrenderer, NULL, vertex, 3, NULL, 0);
+    SDL_RenderGeometry(sdlrenderer, NULL, vertex, 3, NULL, 0); // TODO: give all the triangels at once also use RenderGeometryRaw
 
     // DrawTriangle(sdlrenderer,
     //              tri.p[0].x,

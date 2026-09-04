@@ -49,7 +49,7 @@ public:
                     int c_x,
                     int c_y);
 
-  triInfo GetTriangleInfo(const triangle &tri, const Camera &camera);
+  triInfo GetTriangleInfo(const triangle &tri, const vec3d &cameraPos);
 
   void DrawMesh(const Mesh &mesh, const vec3d &angels, const Camera &camera, const vec3d &objPos, const std::vector<Ilumination> &iluminations);
 
