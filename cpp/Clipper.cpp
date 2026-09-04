@@ -2,33 +2,42 @@
 #include "VecMath.h"
 #include <math.h>
 #include <array>
+#include "profiler.h"
 
 Clipper::Clipper(float vFOV, float aspectRatio, float nearPlain, float farPlain)
 {
-  this->UpdatePlainNormals(vFOV, aspectRatio);
-  this->plainNormals[4] = {0.0f, 0.0f, 1.0f};
-  this->plainNormals[5] = {0.0f, 0.0f, -1.0f};
+  using namespace VecMath;
 
-  this->plainPoints[0] = {0.0f, 0.0f, 0.0f};
-  this->plainPoints[1] = {0.0f, 0.0f, 0.0f};
-  this->plainPoints[2] = {0.0f, 0.0f, 0.0f};
-  this->plainPoints[3] = {0.0f, 0.0f, 0.0f};
-  this->plainPoints[4] = {0.0f, 0.0f, nearPlain};
-  this->plainPoints[5] = {0.0f, 0.0f, farPlain};
+  this->UpdatePlainNormals(vFOV, aspectRatio);
+  this->plain[4].normal = {0.0f, 0.0f, -1.0f};
+  this->plain[5].normal = {0.0f, 0.0f, 1.0f};
+
+  this->plain[0].pointOnPlain = {0.0f, 0.0f, 0.0f};
+  this->plain[1].pointOnPlain = {0.0f, 0.0f, 0.0f};
+  this->plain[2].pointOnPlain = {0.0f, 0.0f, 0.0f};
+  this->plain[3].pointOnPlain = {0.0f, 0.0f, 0.0f};
+  this->plain[4].pointOnPlain = {0.0f, 0.0f, farPlain};
+  this->plain[5].pointOnPlain = {0.0f, 0.0f, nearPlain};
+
+  this->plain[0].offset = -DotProduct(plain[0].normal, {0.0f, 0.0f, 0.0f});
+  this->plain[1].offset = -DotProduct(plain[1].normal, {0.0f, 0.0f, 0.0f});
+  this->plain[2].offset = -DotProduct(plain[2].normal, {0.0f, 0.0f, 0.0f});
+  this->plain[3].offset = -DotProduct(plain[3].normal, {0.0f, 0.0f, 0.0f});
+  this->plain[4].offset = -DotProduct(plain[4].normal, {0.0f, 0.0f, farPlain});
+  this->plain[5].offset = -DotProduct(plain[5].normal, {0.0f, 0.0f, nearPlain});
 }
 
-int Clipper::ClipAgainstPlain(const vec3d &pointOnPlain, const vec3d &normal, const triangle &inTri, triangle &outTri1, triangle &outTri2) // For a triangle
+int Clipper::ClipAgainstPlain(const Plain &plain, const triangle &inTri, triangle &outTri1, triangle &outTri2) // For a triangle
 {
   vec3d inside[3];
   int insideCount = 0;
   vec3d outside[3];
   int outsideCount = 0;
-  float distanceToPlain = VecMath::DotProduct(normal, pointOnPlain); // didn't multi it by -1 to make it dist
 
   for (int i = 0; i < 3; i++)
   {
-    float pdistance = VecMath::DotProduct(normal, inTri.p[i]);
-    if (distanceToPlain <= pdistance) // plain normal is pointing inside
+    float pdistance = VecMath::DotProduct(plain.normal, inTri.p[i]);
+    if (plain.offset >= -pdistance) // plain normal is pointing inside
     {
       inside[insideCount++] = inTri.p[i];
     }
@@ -45,14 +54,14 @@ int Clipper::ClipAgainstPlain(const vec3d &pointOnPlain, const vec3d &normal, co
     return 0;
 
   case 1:
-    VecMath::PlainIntersect(pointOnPlain, normal, inside[0], outside[0], intersection[0]);
-    VecMath::PlainIntersect(pointOnPlain, normal, inside[0], outside[1], intersection[1]);
+    VecMath::PlainIntersect(plain.pointOnPlain, plain.normal, inside[0], outside[0], intersection[0]);
+    VecMath::PlainIntersect(plain.pointOnPlain, plain.normal, inside[0], outside[1], intersection[1]);
     outTri1 = {inside[0], intersection[0], intersection[1]};
     return 1;
 
   case 2:
-    VecMath::PlainIntersect(pointOnPlain, normal, inside[0], outside[0], intersection[0]);
-    VecMath::PlainIntersect(pointOnPlain, normal, inside[1], outside[0], intersection[1]);
+    VecMath::PlainIntersect(plain.pointOnPlain, plain.normal, inside[0], outside[0], intersection[0]);
+    VecMath::PlainIntersect(plain.pointOnPlain, plain.normal, inside[1], outside[0], intersection[1]);
 
     outTri1 = {inside[0], inside[1], intersection[0]};
     outTri2 = {inside[1], intersection[0], intersection[1]};
@@ -107,7 +116,7 @@ bool Clipper::ClipAgainstPlain(const vec3d &pointOnPlain, const vec3d &normal, c
 }
 
 ClipResult
-Clipper::ClipSpace(const triangle &inTri) // FIXME: Huge performace issue
+Clipper::ClipSpace(const triangle &inTri) // FIXME: performace issue
 {
   std::array<triangle, 8> triangles; // you should be able to only use one array
   std::array<triangle, 8> clipped;
@@ -122,21 +131,22 @@ Clipper::ClipSpace(const triangle &inTri) // FIXME: Huge performace issue
 
     for (int i = 0; i < triangleCount; i++)
     {
-      const triangle &tri = triangles[i];
-
-      int triCount = this->ClipAgainstPlain(this->plainPoints[n], this->plainNormals[n], tri, temp1, temp2);
-      if (triCount == 0)
+      switch (this->ClipAgainstPlain(this->plain[n], triangles[i], temp1, temp2))
+      {
+      case 0:
         continue;
 
-      if (triCount == 1)
+      case 1:
         clipped[clippedCount++] = temp1;
+        break;
 
-      else if (triCount == 2)
-      {
+      case 2:
         clipped[clippedCount++] = temp1;
         clipped[clippedCount++] = temp2;
+        break;
       }
     }
+
     std::swap(triangles, clipped);
     triangleCount = clippedCount;
 
@@ -153,14 +163,14 @@ void Clipper::UpdatePlainNormals(const float vFOV, const float aspectRatio)
   float HalfhFov = atanf(tanf(HalfvFov) * aspectRatio);
 
   // Top plain normal
-  this->plainNormals[0] = {0.0f, -sinf(HalfvFov), cosf(HalfvFov)};
+  this->plain[0].normal = {0.0f, -sinf(HalfvFov), cosf(HalfvFov)};
 
   // Right plain normal
-  this->plainNormals[1] = {cosf(HalfhFov), 0.0f, sinf(HalfhFov)};
+  this->plain[1].normal = {cosf(HalfhFov), 0.0f, sinf(HalfhFov)};
 
   // Bottom plain normal
-  this->plainNormals[2] = {0.0f, sinf(HalfvFov), cosf(HalfvFov)};
+  this->plain[2].normal = {0.0f, sinf(HalfvFov), cosf(HalfvFov)};
 
   // Left plain normal
-  this->plainNormals[3] = {-cosf(HalfhFov), 0.0f, sinf(HalfhFov)};
+  this->plain[3].normal = {-cosf(HalfhFov), 0.0f, sinf(HalfhFov)};
 }
